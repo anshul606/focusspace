@@ -4,10 +4,9 @@ import {
   LayersPlus,
   Home,
   ChartBarBig,
-  Settings,
   LogOut,
   ChevronsUpDown,
-  User,
+  Download,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { signOut } from "firebase/auth";
@@ -59,12 +58,6 @@ const navItems = [
   { title: "Home", url: "/dashboard", icon: Home },
   { title: "Analytics", url: "/dashboard/analytics", icon: ChartBarBig },
   { title: "Create", url: "/dashboard/create", icon: LayersPlus },
-];
-
-// Dropdown menu items
-const menuItems = [
-  { title: "Profile", url: "/dashboard/profile", icon: User },
-  { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -123,6 +116,33 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Install Extension Button */}
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip="Install Extension"
+                  size="lg"
+                  className="gap-3 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-300 group-data-[collapsible=icon]:justify-center"
+                >
+                  <a
+                    href="https://chrome.google.com/webstore"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Download strokeWidth={1.75} className="shrink-0" />
+                    <span className="font-medium group-data-[collapsible=icon]:hidden">
+                      Install Extension
+                    </span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       {/* User Menu */}
@@ -169,20 +189,6 @@ export function AppSidebar() {
                 <DropdownMenuLabel className="px-2 text-xs font-medium text-zinc-500">
                   My Account
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator className="my-2 bg-zinc-800/80" />
-
-                {menuItems.map((item) => (
-                  <DropdownMenuItem key={item.title} asChild>
-                    <Link
-                      href={item.url}
-                      className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 text-sm text-zinc-300 transition-colors focus:bg-zinc-800/80 focus:text-white"
-                    >
-                      <item.icon className="size-4" />
-                      {item.title}
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-
                 <DropdownMenuSeparator className="my-2 bg-zinc-800/80" />
                 <DropdownMenuItem
                   onClick={handleLogout}

@@ -1,0 +1,18 @@
+{
+  "name": "focusspace-extension",
+  "version": "1.0.0",
+  "description": "FocusSpace Chrome Extension",
+  "scripts": {
+    "build": "node build.js && npm run copy-assets",
+    "copy-assets": "cp src/popup/*.html src/popup/*.css dist/popup/ 2>/dev/null || true; cp src/content/*.css dist/content/ 2>/dev/null || true",
+    "watch": "node build.js --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.0",
+    "sharp": "^0.34.5",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "firebase": "^10.7.0"
+  }
+}

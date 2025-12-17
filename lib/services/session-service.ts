@@ -5,14 +5,17 @@ import {
   getDoc,
   getDocs,
   updateDoc,
+  deleteDoc,
   query,
   where,
   orderBy,
   Timestamp,
   limit,
+  onSnapshot,
+  Unsubscribe,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { FocusSession } from "@/lib/types/session";
+import { FocusSession, TabSwitchAttempt } from "@/lib/types/session";
 
 /**
  * Input data for creating a new focus session
@@ -184,4 +187,164 @@ export async function incrementTabSwitchAttempts(
   await updateDoc(sessionRef, {
     tabSwitchAttempts: session.tabSwitchAttempts + 1,
   });
+}
+
+/**
+ * Gets all tab switch attempts for a specific session
+ */
+export async function getSessionAttempts(
+  userId: string,
+  sessionId: string
+): Promise<TabSwitchAttempt[]> {
+  const attemptsRef = collection(
+    db,
+    "users",
+    userId,
+    "sessions",
+    sessionId,
+    "attempts"
+  );
+  const q = query(attemptsRef, orderBy("timestamp", "asc"));
+  const snapshot = await getDocs(q);
+
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    sessionId,
+    userId,
+    ...doc.data(),
+  })) as TabSwitchAttempt[];
+}
+
+/**
+ * Gets all tab switch attempts for all sessions of a user
+ */
+export async function getAllAttempts(
+  userId: string
+): Promise<Record<string, TabSwitchAttempt[]>> {
+  const sessions = await getAllSessions(userId);
+  const attemptsBySession: Record<string, TabSwitchAttempt[]> = {};
+
+  for (const session of sessions) {
+    const attempts = await getSessionAttempts(userId, session.id);
+    attemptsBySession[session.id] = attempts;
+  }
+
+  return attemptsBySession;
+}
+
+/**
+ * Logs a tab switch attempt for a session
+ */
+export async function logTabSwitchAttempt(
+  userId: string,
+  sessionId: string,
+  attemptedUrl: string
+): Promise<TabSwitchAttempt> {
+  const attemptsRef = collection(
+    db,
+    "users",
+    userId,
+    "sessions",
+    sessionId,
+    "attempts"
+  );
+
+  const attemptData = {
+    attemptedUrl,
+    timestamp: Timestamp.now(),
+  };
+
+  const docRef = await addDoc(attemptsRef, attemptData);
+
+  // Also increment the counter on the session
+  await incrementTabSwitchAttempts(userId, sessionId);
+
+  return {
+    id: docRef.id,
+    sessionId,
+    userId,
+    ...attemptData,
+  };
+}
+
+/**
+ * Subscribes to real-time updates for the active session
+ * Requirements: 6.1 - Update web application display within 2 seconds when session data changes
+ * Requirements: 6.2 - Chrome extension receives updates within 2 seconds
+ * Returns an unsubscribe function
+ */
+export function subscribeToActiveSession(
+  userId: string,
+  callback: (session: FocusSession | null) => void
+): Unsubscribe {
+  const sessionsRef = getSessionsCollection(userId);
+  const q = query(
+    sessionsRef,
+    where("status", "==", "active"),
+    orderBy("startedAt", "desc"),
+    limit(1)
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    if (snapshot.empty) {
+      callback(null);
+    } else {
+      const doc = snapshot.docs[0];
+      callback({
+        id: doc.id,
+        ...doc.data(),
+      } as FocusSession);
+    }
+  });
+}
+
+/**
+ * Subscribes to real-time updates for a specific session by ID
+ * Returns an unsubscribe function
+ */
+export function subscribeToSession(
+  userId: string,
+  sessionId: string,
+  callback: (session: FocusSession | null) => void
+): Unsubscribe {
+  const sessionRef = doc(db, "users", userId, "sessions", sessionId);
+
+  return onSnapshot(sessionRef, (snapshot) => {
+    if (!snapshot.exists()) {
+      callback(null);
+    } else {
+      callback({
+        id: snapshot.id,
+        ...snapshot.data(),
+      } as FocusSession);
+    }
+  });
+}
+
+/**
+ * Deletes all sessions and their attempts for a user
+ * Used to clear all analytics data
+ */
+export async function deleteAllSessions(userId: string): Promise<void> {
+  const sessions = await getAllSessions(userId);
+
+  for (const session of sessions) {
+    // Delete all attempts for this session
+    const attemptsRef = collection(
+      db,
+      "users",
+      userId,
+      "sessions",
+      session.id,
+      "attempts"
+    );
+    const attemptsSnapshot = await getDocs(attemptsRef);
+    for (const attemptDoc of attemptsSnapshot.docs) {
+      await deleteDoc(attemptDoc.ref);
+    }
+
+    // Delete the session itself
+    const sessionRef = doc(db, "users", userId, "sessions", session.id);
+    await deleteDoc(sessionRef);
+  }
 }
