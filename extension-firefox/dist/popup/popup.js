@@ -14160,6 +14160,7 @@ This typically indicates that your device does not have a healthy Internet conne
   }();
 
   // src/popup/popup.ts
+  var browserAPI = typeof browser !== "undefined" ? browser : chrome;
   var firebaseConfig = {
     apiKey: "AIzaSyD5iAXgpdcMhHbnQOvM4NHAVZ0m97vox2A",
     authDomain: "focusspace-aaa5a.firebaseapp.com",
@@ -14170,15 +14171,10 @@ This typically indicates that your device does not have a healthy Internet conne
   };
   var AUTH_STORAGE_KEY = "focusspace_auth_credentials";
   var icons = {
-    sparkles: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>`,
-    lock: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
-    moon: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`,
-    zap: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
     shield: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>`,
     shieldOff: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 2 20 20"/><path d="M5 5a1 1 0 0 0-1 1v7c0 5 3.5 7.5 7.67 8.94a1 1 0 0 0 .67.01c2.35-.82 4.48-1.97 5.9-3.71"/><path d="M9.309 3.652A12.252 12.252 0 0 0 11.24 2.28a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1v7a9.784 9.784 0 0 1-.08 1.264"/></svg>`,
-    listTodo: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="6" height="6" rx="1"/><path d="m3 17 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>`,
     info: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>`,
-    plus: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`
+    moon: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`
   };
   var app = null;
   var currentUserId = null;
@@ -14206,7 +14202,7 @@ This typically indicates that your device does not have a healthy Internet conne
   }
   async function getStoredCredentials() {
     return new Promise((resolve) => {
-      chrome.storage.local.get([AUTH_STORAGE_KEY], (result) => {
+      browserAPI.storage.local.get([AUTH_STORAGE_KEY], (result) => {
         const credentials = result[AUTH_STORAGE_KEY];
         if (credentials && credentials.expiresAt > Date.now()) {
           resolve(credentials);
@@ -14247,6 +14243,14 @@ This typically indicates that your device does not have a healthy Internet conne
     const remainingSeconds = calculateRemainingSeconds(session);
     const elapsedSeconds = totalSeconds - remainingSeconds;
     return Math.min(100, elapsedSeconds / totalSeconds * 100);
+  }
+  function truncateUrl(url) {
+    try {
+      const parsed = new URL(url);
+      return parsed.hostname;
+    } catch {
+      return url.length > 20 ? url.substring(0, 20) + "..." : url;
+    }
   }
   function renderSessionStatus() {
     if (isLoadingSession) {
@@ -14312,14 +14316,8 @@ This typically indicates that your device does not have a healthy Internet conne
         <div class="url-list">
           <h4>${currentSession.mode === "allowlist" ? "Allowed Sites" : "Blocked Sites"}</h4>
           <div class="urls">
-            ${currentSession.urls.slice(0, 5).map(
-      (url) => `
-              <span class="url-chip">${truncateUrl(url)}</span>
-            `
-    ).join("")}
-            ${currentSession.urls.length > 5 ? `
-              <span class="url-chip">+${currentSession.urls.length - 5} more</span>
-            ` : ""}
+            ${currentSession.urls.slice(0, 5).map((url) => `<span class="url-chip">${truncateUrl(url)}</span>`).join("")}
+            ${currentSession.urls.length > 5 ? `<span class="url-chip">+${currentSession.urls.length - 5} more</span>` : ""}
           </div>
         </div>
       ` : ""}
@@ -14332,18 +14330,9 @@ This typically indicates that your device does not have a healthy Internet conne
     todoSectionEl.classList.remove("hidden");
     startTimerUpdates();
   }
-  function truncateUrl(url) {
-    try {
-      const parsed = new URL(url);
-      return parsed.hostname;
-    } catch {
-      return url.length > 20 ? url.substring(0, 20) + "..." : url;
-    }
-  }
   function startTimerUpdates() {
-    if (timerInterval) {
+    if (timerInterval)
       clearInterval(timerInterval);
-    }
     timerInterval = window.setInterval(() => {
       if (!currentSession) {
         if (timerInterval)
@@ -14378,21 +14367,13 @@ This typically indicates that your device does not have a healthy Internet conne
       return;
     }
     if (todos.length === 0) {
-      todoListEl.innerHTML = `
-      <div class="todo-empty">
-        No tasks yet. Add one below!
-      </div>
-    `;
+      todoListEl.innerHTML = `<div class="todo-empty">No tasks yet. Add one below!</div>`;
       return;
     }
     todoListEl.innerHTML = todos.map(
       (todo) => `
     <div class="todo-item ${todo.completed ? "completed" : ""}" data-id="${todo.id}">
-      <input 
-        type="checkbox" 
-        ${todo.completed ? "checked" : ""} 
-        data-todo-id="${todo.id}"
-      >
+      <input type="checkbox" ${todo.completed ? "checked" : ""} data-todo-id="${todo.id}">
       <span class="todo-text">${escapeHtml(todo.text)}</span>
     </div>
   `
@@ -14468,9 +14449,8 @@ This typically indicates that your device does not have a healthy Internet conne
     }
   }
   function setupSessionListener(userId) {
-    if (sessionUnsubscribe) {
+    if (sessionUnsubscribe)
       sessionUnsubscribe();
-    }
     isLoadingSession = true;
     renderSessionStatus();
     const firebaseApp = initializeFirebaseApp();
@@ -14494,10 +14474,7 @@ This typically indicates that your device does not have a healthy Internet conne
           }
         } else {
           const docData = snapshot.docs[0];
-          currentSession = {
-            id: docData.id,
-            ...docData.data()
-          };
+          currentSession = { id: docData.id, ...docData.data() };
           setupTodosListener(userId, currentSession.id);
         }
         renderSessionStatus();
@@ -14511,9 +14488,8 @@ This typically indicates that your device does not have a healthy Internet conne
     );
   }
   function setupTodosListener(userId, sessionId) {
-    if (todosUnsubscribe) {
+    if (todosUnsubscribe)
       todosUnsubscribe();
-    }
     isLoadingTodos = true;
     renderTodos([]);
     const firebaseApp = initializeFirebaseApp();
@@ -14548,9 +14524,8 @@ This typically indicates that your device does not have a healthy Internet conne
     showState("loading");
     addTodoBtnEl.addEventListener("click", handleAddTodo);
     newTodoInputEl.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
+      if (e.key === "Enter")
         handleAddTodo();
-      }
     });
     const credentials = await getStoredCredentials();
     if (!credentials) {

@@ -13,6 +13,21 @@ function getCookie(name: string): string | null {
   return null;
 }
 
+// Favicon SVGs for theme
+const tealFavicon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>`;
+
+function setFavicon(svgString: string) {
+  const blob = new Blob([svgString], { type: "image/svg+xml" });
+  const url = URL.createObjectURL(blob);
+  let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+  if (!link) {
+    link = document.createElement("link");
+    link.rel = "icon";
+    document.head.appendChild(link);
+  }
+  link.href = url;
+}
+
 export default function DashboardLayout({
   children,
 }: {
@@ -26,6 +41,14 @@ export default function DashboardLayout({
     if (savedState !== null) {
       setDefaultOpen(savedState === "true");
     }
+
+    // Apply Mrinalini theme if saved
+    const savedTheme = localStorage.getItem("mrinalini-theme");
+    if (savedTheme === "true") {
+      document.documentElement.classList.add("mrinalini-theme");
+      setFavicon(tealFavicon);
+    }
+
     setMounted(true);
   }, []);
 

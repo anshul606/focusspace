@@ -130,6 +130,346 @@
   --sidebar-ring: oklch(0.585 0.233 277);
 }
 
+/* Mrinalini Theme - Beautiful Teal Light Theme Easter Egg 💚 */
+.mrinalini-theme {
+  /* Clean white/cream background with subtle teal tint */
+  --background: #f0fdfa;
+  --foreground: #134e4a;
+  --card: #ffffff;
+  --card-foreground: #134e4a;
+  --popover: #ffffff;
+  --popover-foreground: #134e4a;
+  --primary: #0d9488;
+  --primary-foreground: #ffffff;
+  --secondary: #ccfbf1;
+  --secondary-foreground: #0f766e;
+  --muted: #e6fffa;
+  --muted-foreground: #0f766e;
+  --accent: #ccfbf1;
+  --accent-foreground: #134e4a;
+  --destructive: #ef4444;
+  --border: #5eead4;
+  --input: #ccfbf1;
+  --ring: #14b8a6;
+  /* Light teal sidebar */
+  --sidebar: #ccfbf1;
+  --sidebar-foreground: #134e4a;
+  --sidebar-primary: #0d9488;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #99f6e4;
+  --sidebar-accent-foreground: #0f766e;
+  --sidebar-border: #5eead4;
+  --sidebar-ring: #14b8a6;
+}
+
+/* ===== BACKGROUND OVERRIDES ===== */
+.mrinalini-theme .bg-zinc-900\/50,
+.mrinalini-theme .bg-zinc-900,
+.mrinalini-theme .bg-zinc-950,
+.mrinalini-theme .bg-zinc-900\/95,
+.mrinalini-theme .bg-zinc-950\/80,
+.mrinalini-theme .bg-zinc-900\/30 {
+  background-color: #f0fdfa !important;
+}
+
+.mrinalini-theme .bg-zinc-800\/70,
+.mrinalini-theme .bg-zinc-800,
+.mrinalini-theme .bg-zinc-800\/60,
+.mrinalini-theme .bg-zinc-800\/80 {
+  background-color: #ccfbf1 !important;
+}
+
+.mrinalini-theme .bg-zinc-700,
+.mrinalini-theme .bg-zinc-700\/50 {
+  background-color: #99f6e4 !important;
+}
+
+/* Background gradient blurs - make them teal */
+.mrinalini-theme .bg-violet-600\/5 {
+  background-color: rgb(20 184 166 / 0.08) !important;
+}
+
+.mrinalini-theme .bg-indigo-600\/5 {
+  background-color: rgb(13 148 136 / 0.08) !important;
+}
+
+/* ===== TEXT COLOR OVERRIDES ===== */
+.mrinalini-theme .text-white {
+  color: #134e4a !important;
+}
+
+.mrinalini-theme .text-zinc-400,
+.mrinalini-theme .text-zinc-500 {
+  color: #0f766e !important;
+}
+
+.mrinalini-theme .text-zinc-600 {
+  color: #115e59 !important;
+}
+
+/* ===== BORDER OVERRIDES ===== */
+.mrinalini-theme .border-zinc-800\/60,
+.mrinalini-theme .border-zinc-800,
+.mrinalini-theme .border-zinc-800\/50,
+.mrinalini-theme .border-zinc-800\/80,
+.mrinalini-theme .border-zinc-700 {
+  border-color: #5eead4 !important;
+}
+
+.mrinalini-theme .border-r {
+  border-color: #5eead4 !important;
+}
+
+/* ===== ALL INDIGO → TEAL ===== */
+.mrinalini-theme .text-indigo-400,
+.mrinalini-theme .text-indigo-300,
+.mrinalini-theme .text-indigo-500,
+.mrinalini-theme .text-indigo-600 {
+  color: #0d9488 !important;
+}
+
+.mrinalini-theme .bg-indigo-500\/10,
+.mrinalini-theme .bg-indigo-500\/15,
+.mrinalini-theme .bg-indigo-500\/20,
+.mrinalini-theme .bg-indigo-500\/30 {
+  background-color: rgb(20 184 166 / 0.2) !important;
+}
+
+.mrinalini-theme .hover\:bg-indigo-500\/20:hover,
+.mrinalini-theme .hover\:bg-indigo-500\/25:hover {
+  background-color: rgb(20 184 166 / 0.3) !important;
+}
+
+.mrinalini-theme .data-\[active\=true\]\:bg-indigo-500\/15[data-active="true"] {
+  background-color: rgb(20 184 166 / 0.25) !important;
+}
+
+.mrinalini-theme .data-\[active\=true\]\:text-indigo-400[data-active="true"] {
+  color: #0d9488 !important;
+}
+
+/* ===== ALL VIOLET → TEAL ===== */
+.mrinalini-theme .text-violet-400,
+.mrinalini-theme .text-violet-300,
+.mrinalini-theme .text-violet-500,
+.mrinalini-theme .text-violet-600 {
+  color: #0f766e !important;
+}
+
+.mrinalini-theme .bg-violet-500\/20,
+.mrinalini-theme .bg-violet-500\/30 {
+  background-color: rgb(45 212 191 / 0.2) !important;
+}
+
+.mrinalini-theme .bg-violet-600 {
+  background-color: #0d9488 !important;
+}
+
+.mrinalini-theme .bg-violet-500 {
+  background-color: #14b8a6 !important;
+}
+
+.mrinalini-theme .hover\:bg-violet-500:hover {
+  background-color: #14b8a6 !important;
+}
+
+.mrinalini-theme .hover\:text-violet-400:hover {
+  color: #0d9488 !important;
+}
+
+.mrinalini-theme .focus\:border-violet-500\/50:focus {
+  border-color: rgb(20 184 166 / 0.5) !important;
+}
+
+.mrinalini-theme .focus\:ring-violet-500\/20:focus {
+  --tw-ring-color: rgb(20 184 166 / 0.3) !important;
+}
+
+/* ===== GRADIENT OVERRIDES ===== */
+.mrinalini-theme .from-indigo-500\/20,
+.mrinalini-theme .from-indigo-500\/30 {
+  --tw-gradient-from: rgb(20 184 166 / 0.3) !important;
+}
+
+.mrinalini-theme .to-violet-500\/20,
+.mrinalini-theme .to-violet-500\/30 {
+  --tw-gradient-to: rgb(45 212 191 / 0.3) !important;
+}
+
+.mrinalini-theme .from-indigo-600 {
+  --tw-gradient-from: #0d9488 !important;
+}
+
+.mrinalini-theme .to-violet-600 {
+  --tw-gradient-to: #0f766e !important;
+}
+
+.mrinalini-theme .hover\:from-indigo-500:hover {
+  --tw-gradient-from: #14b8a6 !important;
+}
+
+.mrinalini-theme .hover\:to-violet-500:hover {
+  --tw-gradient-to: #0d9488 !important;
+}
+
+/* bg-linear / bg-gradient classes */
+.mrinalini-theme [class*="bg-linear-to-br"][class*="from-indigo"],
+.mrinalini-theme [class*="bg-gradient-to-br"][class*="from-indigo"] {
+  background: linear-gradient(to bottom right, rgb(20 184 166 / 0.25), rgb(45 212 191 / 0.25)) !important;
+}
+
+.mrinalini-theme [class*="bg-linear-to-r"][class*="from-indigo"],
+.mrinalini-theme [class*="bg-gradient-to-r"][class*="from-indigo"] {
+  background: linear-gradient(to right, #0d9488, #0f766e) !important;
+}
+
+/* ===== SHADOW OVERRIDES ===== */
+.mrinalini-theme .shadow-indigo-500\/10,
+.mrinalini-theme .shadow-indigo-500\/20 {
+  --tw-shadow-color: rgb(20 184 166 / 0.2) !important;
+}
+
+.mrinalini-theme .shadow-black\/20 {
+  --tw-shadow-color: rgb(20 184 166 / 0.1) !important;
+}
+
+/* ===== RING OVERRIDES ===== */
+.mrinalini-theme .ring-indigo-500\/30 {
+  --tw-ring-color: rgb(20 184 166 / 0.5) !important;
+}
+
+/* ===== HOVER STATE OVERRIDES ===== */
+.mrinalini-theme .hover\:bg-zinc-800\/70:hover,
+.mrinalini-theme .hover\:bg-zinc-800:hover,
+.mrinalini-theme .hover\:bg-zinc-800\/60:hover {
+  background-color: #99f6e4 !important;
+}
+
+.mrinalini-theme .hover\:text-white:hover {
+  color: #134e4a !important;
+}
+
+.mrinalini-theme .hover\:text-indigo-300:hover {
+  color: #0f766e !important;
+}
+
+/* ===== DATA STATE OVERRIDES ===== */
+.mrinalini-theme .data-\[state\=open\]\:bg-zinc-800\/70[data-state="open"],
+.mrinalini-theme .data-\[state\=open\]\:text-white[data-state="open"] {
+  background-color: #99f6e4 !important;
+  color: #134e4a !important;
+}
+
+/* ===== SKELETON/LOADING ===== */
+.mrinalini-theme .bg-zinc-800 {
+  background-color: #ccfbf1 !important;
+}
+
+/* ===== SEPARATOR ===== */
+.mrinalini-theme .bg-zinc-800\/80 {
+  background-color: #5eead4 !important;
+}
+
+/* ===== FOCUS STATES ===== */
+.mrinalini-theme .focus\:border-indigo-500\/50:focus {
+  border-color: rgb(20 184 166 / 0.5) !important;
+}
+
+.mrinalini-theme .focus\:ring-indigo-500\/20:focus {
+  --tw-ring-color: rgb(20 184 166 / 0.3) !important;
+}
+
+/* ===== BUTTON BACKGROUNDS ===== */
+.mrinalini-theme .bg-indigo-600 {
+  background-color: #0d9488 !important;
+}
+
+.mrinalini-theme .hover\:bg-indigo-500:hover {
+  background-color: #14b8a6 !important;
+}
+
+.mrinalini-theme .bg-indigo-500 {
+  background-color: #14b8a6 !important;
+}
+
+/* ===== BORDER INDIGO ===== */
+.mrinalini-theme .border-indigo-500 {
+  border-color: #14b8a6 !important;
+}
+
+.mrinalini-theme .border-indigo-500\/50 {
+  border-color: rgb(20 184 166 / 0.5) !important;
+}
+
+/* ===== EMERALD/GREEN (keep as teal variant) ===== */
+.mrinalini-theme .text-emerald-400,
+.mrinalini-theme .text-emerald-500 {
+  color: #0d9488 !important;
+}
+
+.mrinalini-theme .bg-emerald-500\/10,
+.mrinalini-theme .bg-emerald-500\/20 {
+  background-color: rgb(20 184 166 / 0.15) !important;
+}
+
+.mrinalini-theme .border-emerald-500\/30 {
+  border-color: rgb(20 184 166 / 0.3) !important;
+}
+
+/* ===== AMBER/YELLOW (keep for warnings) ===== */
+.mrinalini-theme .text-amber-400 {
+  color: #f59e0b !important;
+}
+
+.mrinalini-theme .bg-amber-500\/10 {
+  background-color: rgb(245 158 11 / 0.1) !important;
+}
+
+/* ===== KEEP DESTRUCTIVE RED ===== */
+.mrinalini-theme .text-red-400 {
+  color: #ef4444 !important;
+}
+
+.mrinalini-theme .text-rose-400 {
+  color: #fb7185 !important;
+}
+
+.mrinalini-theme .border-rose-500\/30 {
+  border-color: rgb(244 63 94 / 0.3) !important;
+}
+
+.mrinalini-theme .bg-rose-500\/10 {
+  background-color: rgb(244 63 94 / 0.1) !important;
+}
+
+.mrinalini-theme .focus\:bg-red-500\/10:focus {
+  background-color: rgb(239 68 68 / 0.1) !important;
+}
+
+/* ===== CHECKBOX/RADIO STATES ===== */
+.mrinalini-theme [data-state="checked"] {
+  background-color: #0d9488 !important;
+  border-color: #0d9488 !important;
+}
+
+/* ===== PROGRESS BAR ===== */
+.mrinalini-theme .bg-indigo-500\/20 {
+  background-color: rgb(20 184 166 / 0.2) !important;
+}
+
+/* ===== MISC ZINC OVERRIDES ===== */
+.mrinalini-theme .text-zinc-300 {
+  color: #115e59 !important;
+}
+
+.mrinalini-theme .hover\:border-zinc-700:hover {
+  border-color: #5eead4 !important;
+}
+
+.mrinalini-theme .hover\:text-zinc-300:hover {
+  color: #115e59 !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

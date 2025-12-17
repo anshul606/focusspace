@@ -1,0 +1,55 @@
+{
+  "manifest_version": 2,
+  "name": "FocusSpace - Focus Session Blocker",
+  "version": "1.0.0",
+  "description": "Enforce website restrictions during focus sessions to maintain productivity",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "focusspace@focusspace.app",
+      "strict_min_version": "109.0"
+    }
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "webNavigation",
+    "activeTab",
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": ["dist/background/background.js"],
+    "persistent": false
+  },
+  "browser_action": {
+    "default_popup": "dist/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["dist/content/blocking-overlay.js"],
+      "css": ["dist/content/overlay.css"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "http://localhost/*",
+        "http://127.0.0.1/*",
+        "*://*.focusspace.app/*",
+        "*://*.vercel.app/*"
+      ],
+      "js": ["dist/content/auth-sync.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "web_accessible_resources": ["dist/content/overlay.css"]
+}

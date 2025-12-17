@@ -1,6 +1,7 @@
 "use strict";
 (() => {
   // src/content/auth-sync.ts
+  var browserAPI = typeof browser !== "undefined" ? browser : chrome;
   var AUTH_STORAGE_KEY = "focusspace_auth_credentials";
   function isFocusSpaceDomain() {
     const hostname = window.location.hostname;
@@ -12,13 +13,13 @@
       if (stored) {
         const credentials = JSON.parse(stored);
         if (credentials && credentials.expiresAt > Date.now()) {
-          chrome.runtime.sendMessage(
+          browserAPI.runtime.sendMessage(
             { type: "STORE_AUTH_CREDENTIALS", credentials },
             (response) => {
-              if (chrome.runtime.lastError) {
+              if (browserAPI.runtime.lastError) {
                 console.warn(
                   "[FocusSpace] Error syncing credentials:",
-                  chrome.runtime.lastError.message
+                  browserAPI.runtime.lastError.message
                 );
               } else if (response?.success) {
                 console.log("[FocusSpace] Credentials synced from localStorage");
@@ -38,13 +39,13 @@
     window.addEventListener("focusspace-auth-update", (event) => {
       const credentials = event.detail;
       if (credentials) {
-        chrome.runtime.sendMessage(
+        browserAPI.runtime.sendMessage(
           { type: "STORE_AUTH_CREDENTIALS", credentials },
           (response) => {
-            if (chrome.runtime.lastError) {
+            if (browserAPI.runtime.lastError) {
               console.warn(
                 "[FocusSpace] Error storing credentials:",
-                chrome.runtime.lastError.message
+                browserAPI.runtime.lastError.message
               );
             } else if (response?.success) {
               console.log("[FocusSpace] Auth credentials updated");
@@ -54,13 +55,13 @@
       }
     });
     window.addEventListener("focusspace-auth-clear", () => {
-      chrome.runtime.sendMessage(
+      browserAPI.runtime.sendMessage(
         { type: "CLEAR_AUTH_CREDENTIALS" },
         (response) => {
-          if (chrome.runtime.lastError) {
+          if (browserAPI.runtime.lastError) {
             console.warn(
               "[FocusSpace] Error clearing credentials:",
-              chrome.runtime.lastError.message
+              browserAPI.runtime.lastError.message
             );
           } else if (response?.success) {
             console.log("[FocusSpace] Auth credentials cleared");
@@ -74,10 +75,10 @@
           try {
             const credentials = JSON.parse(event.newValue);
             if (credentials && credentials.expiresAt > Date.now()) {
-              chrome.runtime.sendMessage(
+              browserAPI.runtime.sendMessage(
                 { type: "STORE_AUTH_CREDENTIALS", credentials },
                 () => {
-                  if (chrome.runtime.lastError) {
+                  if (browserAPI.runtime.lastError) {
                   }
                 }
               );
@@ -85,10 +86,13 @@
           } catch {
           }
         } else {
-          chrome.runtime.sendMessage({ type: "CLEAR_AUTH_CREDENTIALS" }, () => {
-            if (chrome.runtime.lastError) {
+          browserAPI.runtime.sendMessage(
+            { type: "CLEAR_AUTH_CREDENTIALS" },
+            () => {
+              if (browserAPI.runtime.lastError) {
+              }
             }
-          });
+          );
         }
       }
     });

@@ -1,6 +1,7 @@
 "use strict";
 (() => {
   // src/content/blocking-overlay.ts
+  var browserAPI = typeof browser !== "undefined" ? browser : chrome;
   var overlayElement = null;
   function createBlockingOverlay(blockedUrl) {
     removeBlockingOverlay();
@@ -58,14 +59,13 @@
     }
   }
   function truncateUrl(url, maxLength = 60) {
-    if (url.length <= maxLength) {
+    if (url.length <= maxLength)
       return url;
-    }
     return url.substring(0, maxLength - 3) + "...";
   }
   function isExtensionContextValid() {
     try {
-      return !!chrome?.runtime?.id;
+      return !!browserAPI?.runtime?.id;
     } catch {
       return false;
     }
@@ -74,7 +74,7 @@
     if (!isExtensionContextValid())
       return;
     try {
-      chrome.runtime.onMessage.addListener(
+      browserAPI.runtime.onMessage.addListener(
         (message, _sender, sendResponse) => {
           try {
             if (!isExtensionContextValid())
@@ -127,9 +127,8 @@
       }
       const listHostnameNorm = normalizeHostname(listParsed.hostname);
       const hostnameMatches = targetHostnameNorm === listHostnameNorm || targetHostnameNorm.endsWith(`.${listHostnameNorm}`) || listHostnameNorm.endsWith(`.${targetHostnameNorm}`);
-      if (!hostnameMatches) {
+      if (!hostnameMatches)
         return false;
-      }
       if (hasSpecificPath(listUrl, listParsed.pathname)) {
         const targetPath = (targetParsed.pathname + targetParsed.search).replace(
           /\/$/,
@@ -149,8 +148,9 @@
       "chrome:",
       "chrome-extension:",
       "about:",
-      "edge:",
-      "brave:"
+      "moz-extension:",
+      "file:",
+      "resource:"
     ];
     try {
       const parsed = new URL(url);
@@ -163,12 +163,12 @@
   }
   function safeSendMessage(message, callback) {
     try {
-      if (!chrome?.runtime?.id)
+      if (!browserAPI?.runtime?.id)
         return;
-      const runtime = chrome.runtime;
+      const runtime = browserAPI.runtime;
       runtime.sendMessage(message, (response) => {
         try {
-          if (!chrome?.runtime?.id)
+          if (!browserAPI?.runtime?.id)
             return;
           const _err = runtime.lastError;
           if (_err)
