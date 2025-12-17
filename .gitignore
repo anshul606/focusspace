@@ -8,6 +8,8 @@ node_modules/
 !.yarn/releases
 !.yarn/versions
 
+
+
 # Next.js
 /.next/
 /out/
