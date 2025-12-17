@@ -71,7 +71,9 @@ export default function CreateSessionPage() {
         // Activate Mrinalini theme
         setMrinaliniTheme(true);
         document.documentElement.classList.add("mrinalini-theme");
+        document.documentElement.classList.remove("sakura-theme");
         localStorage.setItem("mrinalini-theme", "true");
+        localStorage.setItem("sakura-theme", "false");
         setFavicon(tealFavicon);
 
         // Show big centered text

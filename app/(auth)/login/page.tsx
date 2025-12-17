@@ -16,8 +16,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 
-// Favicon helper
+// Favicon helpers
 const tealFavicon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>`;
+const pinkFavicon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>`;
 
 function setFavicon(svgString: string) {
   const blob = new Blob([svgString], { type: "image/svg+xml" });
@@ -75,8 +76,6 @@ function FocusIcon({ className }: { className?: string }) {
 }
 
 export default function LoginPage() {
-  const [isMrinaliniTheme, setIsMrinaliniTheme] = useState(false);
-
   const handleGoogleLogin = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
@@ -88,13 +87,17 @@ export default function LoginPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  // Apply Mrinalini theme if saved
+  // Apply saved theme if any
   useEffect(() => {
-    const savedTheme = localStorage.getItem("mrinalini-theme");
-    if (savedTheme === "true") {
+    const mrinaliniTheme = localStorage.getItem("mrinalini-theme");
+    const sakuraTheme = localStorage.getItem("sakura-theme");
+
+    if (sakuraTheme === "true") {
+      document.documentElement.classList.add("sakura-theme");
+      setFavicon(pinkFavicon);
+    } else if (mrinaliniTheme === "true") {
       document.documentElement.classList.add("mrinalini-theme");
       setFavicon(tealFavicon);
-      setIsMrinaliniTheme(true);
     }
   }, []);
 

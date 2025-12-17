@@ -470,6 +470,289 @@
   color: #115e59 !important;
 }
 
+/* Sakura Theme - Beautiful Pastel Pink Light Theme Easter Egg 🌸 */
+.sakura-theme {
+  --background: #fdf2f8;
+  --foreground: #831843;
+  --card: #ffffff;
+  --card-foreground: #831843;
+  --popover: #ffffff;
+  --popover-foreground: #831843;
+  --primary: #db2777;
+  --primary-foreground: #ffffff;
+  --secondary: #fce7f3;
+  --secondary-foreground: #be185d;
+  --muted: #fdf2f8;
+  --muted-foreground: #be185d;
+  --accent: #fbcfe8;
+  --accent-foreground: #831843;
+  --destructive: #ef4444;
+  --border: #f9a8d4;
+  --input: #fce7f3;
+  --ring: #ec4899;
+  --sidebar: #fce7f3;
+  --sidebar-foreground: #831843;
+  --sidebar-primary: #db2777;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fbcfe8;
+  --sidebar-accent-foreground: #be185d;
+  --sidebar-border: #f9a8d4;
+  --sidebar-ring: #ec4899;
+}
+
+/* ===== SAKURA BACKGROUND OVERRIDES ===== */
+.sakura-theme .bg-zinc-900\/50,
+.sakura-theme .bg-zinc-900,
+.sakura-theme .bg-zinc-950,
+.sakura-theme .bg-zinc-900\/95,
+.sakura-theme .bg-zinc-950\/80,
+.sakura-theme .bg-zinc-900\/30 {
+  background-color: #fdf2f8 !important;
+}
+
+.sakura-theme .bg-zinc-800\/70,
+.sakura-theme .bg-zinc-800,
+.sakura-theme .bg-zinc-800\/60,
+.sakura-theme .bg-zinc-800\/80,
+.sakura-theme .bg-zinc-800\/50 {
+  background-color: #fce7f3 !important;
+}
+
+.sakura-theme .bg-zinc-700,
+.sakura-theme .bg-zinc-700\/50 {
+  background-color: #fbcfe8 !important;
+}
+
+.sakura-theme .bg-violet-600\/5,
+.sakura-theme .bg-indigo-600\/5 {
+  background-color: rgb(236 72 153 / 0.08) !important;
+}
+
+/* ===== SAKURA TEXT COLOR OVERRIDES ===== */
+.sakura-theme .text-white {
+  color: #831843 !important;
+}
+
+.sakura-theme .text-zinc-400,
+.sakura-theme .text-zinc-500 {
+  color: #be185d !important;
+}
+
+.sakura-theme .text-zinc-600,
+.sakura-theme .text-zinc-300 {
+  color: #9d174d !important;
+}
+
+/* ===== SAKURA BORDER OVERRIDES ===== */
+.sakura-theme .border-zinc-800\/60,
+.sakura-theme .border-zinc-800,
+.sakura-theme .border-zinc-800\/50,
+.sakura-theme .border-zinc-800\/80,
+.sakura-theme .border-zinc-700 {
+  border-color: #f9a8d4 !important;
+}
+
+.sakura-theme .border-r {
+  border-color: #f9a8d4 !important;
+}
+
+/* ===== SAKURA INDIGO → PINK ===== */
+.sakura-theme .text-indigo-400,
+.sakura-theme .text-indigo-300,
+.sakura-theme .text-indigo-500,
+.sakura-theme .text-indigo-600 {
+  color: #db2777 !important;
+}
+
+.sakura-theme .bg-indigo-500\/10,
+.sakura-theme .bg-indigo-500\/15,
+.sakura-theme .bg-indigo-500\/20,
+.sakura-theme .bg-indigo-500\/30 {
+  background-color: rgb(236 72 153 / 0.2) !important;
+}
+
+.sakura-theme .hover\:bg-indigo-500\/20:hover,
+.sakura-theme .hover\:bg-indigo-500\/25:hover {
+  background-color: rgb(236 72 153 / 0.3) !important;
+}
+
+.sakura-theme .data-\[active\=true\]\:bg-indigo-500\/15[data-active="true"] {
+  background-color: rgb(236 72 153 / 0.25) !important;
+}
+
+.sakura-theme .data-\[active\=true\]\:text-indigo-400[data-active="true"] {
+  color: #db2777 !important;
+}
+
+/* ===== SAKURA VIOLET → PINK ===== */
+.sakura-theme .text-violet-400,
+.sakura-theme .text-violet-300,
+.sakura-theme .text-violet-500,
+.sakura-theme .text-violet-600 {
+  color: #ec4899 !important;
+}
+
+.sakura-theme .bg-violet-500\/20,
+.sakura-theme .bg-violet-500\/30 {
+  background-color: rgb(244 114 182 / 0.2) !important;
+}
+
+.sakura-theme .bg-violet-600,
+.sakura-theme .bg-violet-500 {
+  background-color: #db2777 !important;
+}
+
+.sakura-theme .hover\:bg-violet-500:hover {
+  background-color: #ec4899 !important;
+}
+
+.sakura-theme .hover\:text-violet-400:hover {
+  color: #db2777 !important;
+}
+
+.sakura-theme .focus\:border-violet-500\/50:focus {
+  border-color: rgb(236 72 153 / 0.5) !important;
+}
+
+.sakura-theme .focus\:ring-violet-500\/20:focus {
+  --tw-ring-color: rgb(236 72 153 / 0.3) !important;
+}
+
+/* ===== SAKURA GRADIENT OVERRIDES ===== */
+.sakura-theme .from-indigo-500\/20,
+.sakura-theme .from-indigo-500\/30 {
+  --tw-gradient-from: rgb(236 72 153 / 0.3) !important;
+}
+
+.sakura-theme .to-violet-500\/20,
+.sakura-theme .to-violet-500\/30 {
+  --tw-gradient-to: rgb(244 114 182 / 0.3) !important;
+}
+
+.sakura-theme .from-indigo-600 {
+  --tw-gradient-from: #db2777 !important;
+}
+
+.sakura-theme .to-violet-600 {
+  --tw-gradient-to: #ec4899 !important;
+}
+
+.sakura-theme .hover\:from-indigo-500:hover {
+  --tw-gradient-from: #ec4899 !important;
+}
+
+.sakura-theme .hover\:to-violet-500:hover {
+  --tw-gradient-to: #db2777 !important;
+}
+
+.sakura-theme [class*="bg-linear-to-br"][class*="from-indigo"],
+.sakura-theme [class*="bg-gradient-to-br"][class*="from-indigo"] {
+  background: linear-gradient(to bottom right, rgb(236 72 153 / 0.25), rgb(244 114 182 / 0.25)) !important;
+}
+
+.sakura-theme [class*="bg-linear-to-r"][class*="from-indigo"],
+.sakura-theme [class*="bg-gradient-to-r"][class*="from-indigo"] {
+  background: linear-gradient(to right, #db2777, #ec4899) !important;
+}
+
+/* ===== SAKURA SHADOW OVERRIDES ===== */
+.sakura-theme .shadow-indigo-500\/10,
+.sakura-theme .shadow-indigo-500\/20 {
+  --tw-shadow-color: rgb(236 72 153 / 0.2) !important;
+}
+
+.sakura-theme .shadow-black\/20 {
+  --tw-shadow-color: rgb(236 72 153 / 0.1) !important;
+}
+
+/* ===== SAKURA RING OVERRIDES ===== */
+.sakura-theme .ring-indigo-500\/30 {
+  --tw-ring-color: rgb(236 72 153 / 0.5) !important;
+}
+
+/* ===== SAKURA HOVER STATE OVERRIDES ===== */
+.sakura-theme .hover\:bg-zinc-800\/70:hover,
+.sakura-theme .hover\:bg-zinc-800:hover,
+.sakura-theme .hover\:bg-zinc-800\/60:hover {
+  background-color: #fbcfe8 !important;
+}
+
+.sakura-theme .hover\:text-white:hover {
+  color: #831843 !important;
+}
+
+.sakura-theme .hover\:text-indigo-300:hover {
+  color: #be185d !important;
+}
+
+/* ===== SAKURA DATA STATE OVERRIDES ===== */
+.sakura-theme .data-\[state\=open\]\:bg-zinc-800\/70[data-state="open"],
+.sakura-theme .data-\[state\=open\]\:text-white[data-state="open"] {
+  background-color: #fbcfe8 !important;
+  color: #831843 !important;
+}
+
+/* ===== SAKURA FOCUS STATES ===== */
+.sakura-theme .focus\:border-indigo-500\/50:focus {
+  border-color: rgb(236 72 153 / 0.5) !important;
+}
+
+.sakura-theme .focus\:ring-indigo-500\/20:focus {
+  --tw-ring-color: rgb(236 72 153 / 0.3) !important;
+}
+
+/* ===== SAKURA BUTTON BACKGROUNDS ===== */
+.sakura-theme .bg-indigo-600 {
+  background-color: #db2777 !important;
+}
+
+.sakura-theme .hover\:bg-indigo-500:hover {
+  background-color: #ec4899 !important;
+}
+
+.sakura-theme .bg-indigo-500 {
+  background-color: #ec4899 !important;
+}
+
+/* ===== SAKURA BORDER INDIGO ===== */
+.sakura-theme .border-indigo-500 {
+  border-color: #ec4899 !important;
+}
+
+.sakura-theme .border-indigo-500\/50 {
+  border-color: rgb(236 72 153 / 0.5) !important;
+}
+
+/* ===== SAKURA EMERALD → PINK ===== */
+.sakura-theme .text-emerald-400,
+.sakura-theme .text-emerald-500 {
+  color: #db2777 !important;
+}
+
+.sakura-theme .bg-emerald-500\/10,
+.sakura-theme .bg-emerald-500\/20 {
+  background-color: rgb(236 72 153 / 0.15) !important;
+}
+
+.sakura-theme .border-emerald-500\/30 {
+  border-color: rgb(236 72 153 / 0.3) !important;
+}
+
+/* ===== SAKURA CHECKBOX/RADIO STATES ===== */
+.sakura-theme [data-state="checked"] {
+  background-color: #db2777 !important;
+  border-color: #db2777 !important;
+}
+
+/* ===== SAKURA MISC ===== */
+.sakura-theme .hover\:border-zinc-700:hover {
+  border-color: #f9a8d4 !important;
+}
+
+.sakura-theme .hover\:text-zinc-300:hover {
+  color: #9d174d !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
 import ProtectedRoute from "@/components/protected-route";
 import { useAuth } from "@/context/auth-context";
 import {
@@ -20,7 +21,7 @@ import { BlockedUrlsTable } from "@/components/analytics/blocked-urls-table";
 import { SessionHistory } from "@/components/analytics/session-history";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Trash2 } from "lucide-react";
+import { BarChart3, Trash2, Heart, Sparkles, Cherry } from "lucide-react";
 
 /**
  * Analytics dashboard page
@@ -30,6 +31,22 @@ import { BarChart3, Trash2 } from "lucide-react";
  * Requirements: 4.4 - Display session duration statistics
  * Requirements: 4.5 - Display timeline of tab switch attempts during sessions
  */
+// Favicon helpers
+const defaultFavicon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>`;
+const pinkFavicon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>`;
+
+function setFavicon(svgString: string) {
+  const blob = new Blob([svgString], { type: "image/svg+xml" });
+  const url = URL.createObjectURL(blob);
+  let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+  if (!link) {
+    link = document.createElement("link");
+    link.rel = "icon";
+    document.head.appendChild(link);
+  }
+  link.href = url;
+}
+
 export default function AnalyticsPage() {
   const { user } = useAuth();
   const [sessions, setSessions] = useState<FocusSession[]>([]);
@@ -39,6 +56,103 @@ export default function AnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Sakura theme easter egg state
+  const [clickCount, setClickCount] = useState(0);
+  const [sakuraTheme, setSakuraTheme] = useState(false);
+  const [showThemeText, setShowThemeText] = useState(false);
+  const [themeTextContent, setThemeTextContent] = useState("");
+  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Check for saved theme preference on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("sakura-theme");
+    if (savedTheme === "true") {
+      setSakuraTheme(true);
+      document.documentElement.classList.add("sakura-theme");
+      // Remove mrinalini theme if active
+      document.documentElement.classList.remove("mrinalini-theme");
+      setFavicon(pinkFavicon);
+    }
+  }, []);
+
+  // Handle the secret icon click
+  const handleIconClick = () => {
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+    }
+    clickTimeoutRef.current = setTimeout(() => {
+      setClickCount(0);
+    }, 2000);
+
+    const newCount = clickCount + 1;
+    setClickCount(newCount);
+
+    if (newCount === 6) {
+      setClickCount(0);
+
+      if (!sakuraTheme) {
+        // Activate Sakura theme
+        setSakuraTheme(true);
+        document.documentElement.classList.add("sakura-theme");
+        document.documentElement.classList.remove("mrinalini-theme");
+        localStorage.setItem("sakura-theme", "true");
+        localStorage.setItem("mrinalini-theme", "false");
+        setFavicon(pinkFavicon);
+
+        // Show big centered text
+        setThemeTextContent("Sakura Theme Activated");
+        setShowThemeText(true);
+        setTimeout(() => setShowThemeText(false), 2500);
+
+        toast.success("🌸 Sakura Theme Activated!", {
+          description: "Enjoy the pink vibes 💕",
+          duration: 4000,
+        });
+
+        // Fire pink confetti!
+        const duration = 3000;
+        const end = Date.now() + duration;
+        const colors = ["#ec4899", "#db2777", "#f472b6", "#fbcfe8", "#fce7f3"];
+
+        (function frame() {
+          confetti({
+            particleCount: 3,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: colors,
+          });
+          confetti({
+            particleCount: 3,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: colors,
+          });
+
+          if (Date.now() < end) {
+            requestAnimationFrame(frame);
+          }
+        })();
+      } else {
+        // Deactivate Sakura theme
+        setSakuraTheme(false);
+        document.documentElement.classList.remove("sakura-theme");
+        localStorage.setItem("sakura-theme", "false");
+        setFavicon(defaultFavicon);
+
+        setThemeTextContent("Theme Deactivated");
+        setShowThemeText(true);
+        setTimeout(() => setShowThemeText(false), 2000);
+
+        toast.info("Sakura Theme Deactivated", {
+          description: "Back to the default look",
+          duration: 3000,
+        });
+      }
+    }
+  };
 
   useEffect(() => {
     async function fetchAnalyticsData() {
@@ -99,12 +213,70 @@ export default function AnalyticsPage() {
   return (
     <ProtectedRoute>
       <div className="p-6 space-y-6">
+        {/* Big Theme Activation Text Overlay */}
+        {showThemeText && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center gap-4">
+                {sakuraTheme ? (
+                  <>
+                    <Cherry
+                      className="size-10 md:size-14 text-pink-400 animate-bounce"
+                      style={{ animationDelay: "0ms" }}
+                    />
+                    <Heart
+                      className="size-8 md:size-10 text-pink-300 animate-bounce"
+                      style={{ animationDelay: "150ms" }}
+                    />
+                  </>
+                ) : (
+                  <Sparkles className="size-10 md:size-14 text-indigo-400 animate-bounce" />
+                )}
+                <h1
+                  className="text-4xl md:text-6xl font-black tracking-tight text-white animate-in zoom-in-50 duration-500"
+                  style={{
+                    textShadow: sakuraTheme
+                      ? "0 0 40px rgba(236, 72, 153, 0.8), 0 0 80px rgba(236, 72, 153, 0.5), 0 0 120px rgba(236, 72, 153, 0.3)"
+                      : "0 0 40px rgba(129, 140, 248, 0.8), 0 0 80px rgba(129, 140, 248, 0.5)",
+                  }}
+                >
+                  {themeTextContent}
+                </h1>
+                {sakuraTheme ? (
+                  <>
+                    <Heart
+                      className="size-8 md:size-10 text-pink-300 animate-bounce"
+                      style={{ animationDelay: "100ms" }}
+                    />
+                    <Cherry
+                      className="size-10 md:size-14 text-pink-400 animate-bounce"
+                      style={{ animationDelay: "200ms" }}
+                    />
+                  </>
+                ) : (
+                  <Sparkles
+                    className="size-10 md:size-14 text-indigo-400 animate-bounce"
+                    style={{ animationDelay: "100ms" }}
+                  />
+                )}
+              </div>
+              <p className="text-lg text-white/80 font-medium">
+                {sakuraTheme ? "Enjoy the pink vibes 🌸" : "Back to default ✨"}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-linear-to-br from-indigo-500/20 to-violet-500/20">
+            <button
+              onClick={handleIconClick}
+              className="flex size-10 items-center justify-center rounded-lg bg-linear-to-br from-indigo-500/20 to-violet-500/20 transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+              aria-label="Theme toggle easter egg"
+            >
               <BarChart3 className="size-5 text-indigo-400" />
-            </div>
+            </button>
             <div>
               <h1 className="text-2xl font-semibold text-white">Analytics</h1>
               <p className="text-sm text-zinc-500">
