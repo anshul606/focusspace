@@ -129,7 +129,7 @@ export function AppSidebar() {
                   className="gap-3 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-300 group-data-[collapsible=icon]:justify-center"
                 >
                   <a
-                    href="https://www.transfernow.net/dl/focusspace"
+                    href="https://www.transfernow.net/dl/focusspace1"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
