@@ -322,6 +322,49 @@ export function subscribeToSession(
 }
 
 /**
+ * Adds a URL to an active session's URL list
+ */
+export async function addUrlToSession(
+  userId: string,
+  sessionId: string,
+  newUrl: string
+): Promise<void> {
+  const session = await getSessionById(userId, sessionId);
+  if (!session) {
+    throw new Error("Session not found");
+  }
+
+  // Don't add duplicates
+  if (session.urls.includes(newUrl)) {
+    return;
+  }
+
+  const sessionRef = doc(db, "users", userId, "sessions", sessionId);
+  await updateDoc(sessionRef, {
+    urls: [...session.urls, newUrl],
+  });
+}
+
+/**
+ * Removes a URL from an active session's URL list
+ */
+export async function removeUrlFromSession(
+  userId: string,
+  sessionId: string,
+  urlToRemove: string
+): Promise<void> {
+  const session = await getSessionById(userId, sessionId);
+  if (!session) {
+    throw new Error("Session not found");
+  }
+
+  const sessionRef = doc(db, "users", userId, "sessions", sessionId);
+  await updateDoc(sessionRef, {
+    urls: session.urls.filter((url) => url !== urlToRemove),
+  });
+}
+
+/**
  * Deletes all sessions and their attempts for a user
  * Used to clear all analytics data
  */

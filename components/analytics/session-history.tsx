@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { FocusSession, TabSwitchAttempt } from "@/lib/types/session";
 import {
   Card,
@@ -10,6 +11,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
@@ -25,6 +27,7 @@ import {
   AlertTriangle,
   CheckCircle,
   StopCircle,
+  RotateCcw,
 } from "lucide-react";
 
 interface SessionHistoryProps {
@@ -40,7 +43,19 @@ export function SessionHistory({
   sessions,
   attemptsBySession,
 }: SessionHistoryProps) {
+  const router = useRouter();
   const [openSessions, setOpenSessions] = useState<Set<string>>(new Set());
+
+  const handleUseConfig = (session: FocusSession) => {
+    // Store session config in sessionStorage for the create page to pick up
+    const config = {
+      mode: session.mode,
+      urls: session.urls,
+      durationMinutes: session.durationMinutes,
+    };
+    sessionStorage.setItem("reuse-session-config", JSON.stringify(config));
+    router.push("/dashboard/create");
+  };
 
   const toggleSession = (sessionId: string) => {
     setOpenSessions((prev) => {
@@ -259,6 +274,19 @@ export function SessionHistory({
                         </p>
                       </div>
                     )}
+
+                    {/* Use This Config Button */}
+                    <div className="mt-4 pt-3 border-t border-zinc-800">
+                      <Button
+                        onClick={() => handleUseConfig(session)}
+                        variant="outline"
+                        size="sm"
+                        className="w-full border-indigo-500/30 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-300"
+                      >
+                        <RotateCcw className="size-3 mr-2" />
+                        Start New Session with This Config
+                      </Button>
+                    </div>
                   </div>
                 </CollapsibleContent>
               </div>

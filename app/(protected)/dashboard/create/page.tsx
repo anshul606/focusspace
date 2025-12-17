@@ -23,6 +23,9 @@ export default function CreateSessionPage() {
   const [mrinaliniTheme, setMrinaliniTheme] = useState(false);
   const [showThemeText, setShowThemeText] = useState(false);
   const [themeTextContent, setThemeTextContent] = useState("");
+  const [initialFormData, setInitialFormData] = useState<
+    Partial<SessionFormData> | undefined
+  >();
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Favicon SVGs
@@ -41,13 +44,28 @@ export default function CreateSessionPage() {
     link.href = url;
   };
 
-  // Check for saved theme preference on mount
+  // Check for saved theme preference and reused session config on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem("mrinalini-theme");
     if (savedTheme === "true") {
       setMrinaliniTheme(true);
       document.documentElement.classList.add("mrinalini-theme");
       setFavicon(tealFavicon);
+    }
+
+    // Check for reused session config from analytics
+    const reuseConfig = sessionStorage.getItem("reuse-session-config");
+    if (reuseConfig) {
+      try {
+        const config = JSON.parse(reuseConfig);
+        setInitialFormData(config);
+        sessionStorage.removeItem("reuse-session-config");
+        toast.info("Session config loaded from history", {
+          description: "Modify settings as needed and start your session",
+        });
+      } catch (e) {
+        console.error("Failed to parse reuse config:", e);
+      }
     }
   }, []);
 
@@ -161,6 +179,9 @@ export default function CreateSessionPage() {
         )
       );
 
+      // Clear the draft since session was created successfully
+      localStorage.removeItem("focusspace-draft-session");
+
       toast.success("Focus session started! Time to get in the zone.");
       router.push("/dashboard");
     } catch (error) {
@@ -259,7 +280,12 @@ export default function CreateSessionPage() {
 
       {/* Form Components */}
       <div className="grid gap-6">
-        <SessionForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+        <SessionForm
+          key={initialFormData ? JSON.stringify(initialFormData) : "default"}
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+          initialData={initialFormData}
+        />
         <TodoEditor todos={todos} onTodosChange={setTodos} />
       </div>
     </div>

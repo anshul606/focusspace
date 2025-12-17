@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Clock, Shield, ShieldOff } from "lucide-react";
 import {
   Card,
@@ -25,6 +25,7 @@ export interface SessionFormData {
 interface SessionFormProps {
   onSubmit: (data: SessionFormData) => void;
   isSubmitting?: boolean;
+  initialData?: Partial<SessionFormData>;
 }
 
 const DURATION_PRESETS = [
@@ -33,14 +34,55 @@ const DURATION_PRESETS = [
   { label: "90m", value: 90, description: "Flow state" },
 ];
 
+const STORAGE_KEY = "focusspace-draft-session";
+
 export function SessionForm({
   onSubmit,
   isSubmitting = false,
+  initialData,
 }: SessionFormProps) {
   const [mode, setMode] = useState<"allowlist" | "blocklist">("blocklist");
   const [urls, setUrls] = useState<string[]>([]);
   const [durationMinutes, setDurationMinutes] = useState<string>("25");
   const [durationError, setDurationError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Load from localStorage or initialData on mount
+  useEffect(() => {
+    // First priority: initialData from props (reused session)
+    if (initialData && Object.keys(initialData).length > 0) {
+      if (initialData.mode) setMode(initialData.mode);
+      if (initialData.urls) setUrls(initialData.urls);
+      if (initialData.durationMinutes)
+        setDurationMinutes(initialData.durationMinutes.toString());
+      setIsInitialized(true);
+      // Clear any saved draft since we're using a reused config
+      localStorage.removeItem(STORAGE_KEY);
+      return;
+    }
+
+    // Second priority: saved draft from localStorage
+    const savedDraft = localStorage.getItem(STORAGE_KEY);
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        if (draft.mode) setMode(draft.mode);
+        if (draft.urls) setUrls(draft.urls);
+        if (draft.durationMinutes) setDurationMinutes(draft.durationMinutes);
+      } catch (e) {
+        console.error("Failed to parse saved draft:", e);
+      }
+    }
+    setIsInitialized(true);
+  }, [initialData]);
+
+  // Save to localStorage whenever form changes (after initialization)
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const draft = { mode, urls, durationMinutes };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+  }, [mode, urls, durationMinutes, isInitialized]);
 
   const handleDurationChange = (value: string) => {
     setDurationMinutes(value);
