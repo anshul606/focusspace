@@ -58,7 +58,7 @@ function FocusIcon({ className }: { className?: string }) {
 const navItems = [
   { title: "Home", url: "/dashboard", icon: Home },
   { title: "Analytics", url: "/dashboard/analytics", icon: ChartBarBig },
-  { title: "create", url: "/dashboard/create", icon: LayersPlus },
+  { title: "Create", url: "/dashboard/create", icon: LayersPlus },
 ];
 
 // Dropdown menu items
