@@ -1,5 +1,5 @@
 /**
- * Background Service Worker for FocusSpace Chrome Extension
+ * Background Service Worker for Flow Chrome Extension
  * Handles session monitoring, URL blocking, and tab switch attempt logging
  *
  * Requirements:
@@ -25,7 +25,7 @@ import {
   Unsubscribe,
 } from "firebase/firestore";
 import { FocusSession, StoredAuthCredentials } from "../lib/types";
-import { shouldBlockUrl } from "../lib/url-blocker";
+import { shouldBlockUrl, fetchAllowedDomains } from "../lib/url-blocker";
 
 // Firebase configuration - should match web app
 const firebaseConfig = {
@@ -44,7 +44,10 @@ let currentUserId: string | null = null;
 let sessionUnsubscribe: Unsubscribe | null = null;
 
 // Storage key for auth credentials
-const AUTH_STORAGE_KEY = "focusspace_auth_credentials";
+const AUTH_STORAGE_KEY = "flow_auth_credentials";
+
+// Track URLs that were already open when session started (don't log these as attempts)
+const preOpenedUrls = new Set<string>();
 
 /**
  * Initialize Firebase app
@@ -102,9 +105,16 @@ function setupSessionListener(userId: string): void {
       const previousSession = currentSession;
 
       if (snapshot.empty) {
+        // Check if previous session was completed (not just stopped/cancelled)
+        if (previousSession && previousSession.status === "active") {
+          // Session ended - check if it was completed naturally
+          checkIfSessionCompleted(userId, previousSession.id, previousSession);
+        }
+
         currentSession = null;
-        console.log("[FocusSpace] No active session");
-        // Notify all tabs to remove overlay when session ends
+        console.log("[Flow] No active session");
+        // Clear pre-opened URLs when session ends
+        preOpenedUrls.clear();
         notifyAllTabsSessionEnded();
       } else {
         const docData = snapshot.docs[0];
@@ -112,7 +122,7 @@ function setupSessionListener(userId: string): void {
           id: docData.id,
           ...docData.data(),
         } as FocusSession;
-        console.log("[FocusSpace] Active session loaded:", currentSession.id);
+        console.log("[Flow] Active session loaded:", currentSession.id);
 
         // Check all open tabs when session starts or changes
         // Only do this if session just became active or URLs changed
@@ -127,7 +137,7 @@ function setupSessionListener(userId: string): void {
       }
     },
     (error) => {
-      console.error("[FocusSpace] Error listening to session:", error);
+      console.error("[Flow] Error listening to session:", error);
       currentSession = null;
     }
   );
@@ -149,22 +159,28 @@ function cleanupSessionListener(): void {
  * Initialize the extension - check for auth and set up listeners
  */
 async function initialize(): Promise<void> {
-  console.log("[FocusSpace] Initializing background service worker");
+  console.log("[Flow] Initializing background service worker");
+
+  // Fetch allowed domains from server on startup
+  fetchAllowedDomains().catch((err) => {
+    console.warn("[Flow] Failed to fetch allowed domains on init:", err);
+  });
 
   const credentials = await getStoredCredentials();
 
   if (credentials) {
     currentUserId = credentials.uid;
     setupSessionListener(credentials.uid);
-    console.log("[FocusSpace] Authenticated as user:", credentials.uid);
+    console.log("[Flow] Authenticated as user:", credentials.uid);
   } else {
-    console.log("[FocusSpace] No stored credentials - waiting for login");
+    console.log("[Flow] No stored credentials - waiting for login");
   }
 }
 
 /**
  * Handle navigation events - block restricted URLs
  * Requirements: 3.1, 3.2 - Block URLs based on session mode
+ * Only logs attempts for NEW navigations, not pre-opened tabs
  */
 function handleNavigation(
   details: chrome.webNavigation.WebNavigationBaseCallbackDetails
@@ -178,10 +194,10 @@ function handleNavigation(
 
   // Check if URL should be blocked
   if (shouldBlockUrl(url, currentSession)) {
-    console.log("[FocusSpace] Blocking navigation to:", url);
+    console.log("[Flow] Blocking navigation to:", url);
 
-    // Log the attempt
-    if (currentSession && currentUserId) {
+    // Only log the attempt if this is a NEW navigation (not a pre-opened tab)
+    if (currentSession && currentUserId && !preOpenedUrls.has(url)) {
       logTabSwitchAttempt(currentUserId, currentSession.id, url);
     }
 
@@ -194,6 +210,7 @@ function handleNavigation(
 /**
  * Check all open tabs and apply blocking overlay if needed
  * Called when session starts or changes
+ * Pre-opened tabs are blocked but NOT logged as attempts
  */
 async function checkAllOpenTabs(): Promise<void> {
   if (!currentSession || currentSession.status !== "active") {
@@ -203,18 +220,19 @@ async function checkAllOpenTabs(): Promise<void> {
   try {
     const tabs = await chrome.tabs.query({});
 
+    // Clear and rebuild the pre-opened URLs set
+    preOpenedUrls.clear();
+
     for (const tab of tabs) {
       if (!tab.id || !tab.url) continue;
 
       if (shouldBlockUrl(tab.url, currentSession)) {
-        console.log("[FocusSpace] Blocking already open tab:", tab.url);
+        console.log("[Flow] Blocking already open tab:", tab.url);
 
-        // Log the attempt
-        if (currentUserId) {
-          logTabSwitchAttempt(currentUserId, currentSession.id, tab.url);
-        }
+        // Mark this URL as pre-opened (don't log as attempt)
+        preOpenedUrls.add(tab.url);
 
-        // Send message to show overlay
+        // Send message to show overlay (but don't log the attempt)
         chrome.tabs
           .sendMessage(tab.id, {
             type: "SHOW_BLOCKING_OVERLAY",
@@ -228,7 +246,7 @@ async function checkAllOpenTabs(): Promise<void> {
       }
     }
   } catch (error) {
-    console.error("[FocusSpace] Error checking open tabs:", error);
+    console.error("[Flow] Error checking open tabs:", error);
   }
 }
 
@@ -261,15 +279,11 @@ async function injectBlockingOverlay(
           session: currentSession,
         })
         .catch(() => {
-          console.log("[FocusSpace] Could not show overlay on tab:", tabId);
+          console.log("[Flow] Could not show overlay on tab:", tabId);
         });
     }, 100);
   } catch (error) {
-    console.log(
-      "[FocusSpace] Could not inject overlay into tab:",
-      tabId,
-      error
-    );
+    console.log("[Flow] Could not inject overlay into tab:", tabId, error);
   }
 }
 
@@ -304,9 +318,9 @@ async function logTabSwitchAttempt(
     // Increment the session's tabSwitchAttempts counter
     await incrementTabSwitchAttempts(userId, sessionId);
 
-    console.log("[FocusSpace] Logged tab switch attempt:", attemptedUrl);
+    console.log("[Flow] Logged tab switch attempt:", attemptedUrl);
   } catch (error) {
-    console.error("[FocusSpace] Error logging tab switch attempt:", error);
+    console.error("[Flow] Error logging tab switch attempt:", error);
   }
 }
 
@@ -332,10 +346,7 @@ async function incrementTabSwitchAttempts(
       });
     }
   } catch (error) {
-    console.error(
-      "[FocusSpace] Error incrementing tab switch attempts:",
-      error
-    );
+    console.error("[Flow] Error incrementing tab switch attempts:", error);
   }
 }
 
@@ -353,11 +364,11 @@ function setupAuthListener(): void {
         // User logged in
         currentUserId = newCredentials.uid;
         setupSessionListener(newCredentials.uid);
-        console.log("[FocusSpace] User logged in:", newCredentials.uid);
+        console.log("[Flow] User logged in:", newCredentials.uid);
       } else {
         // User logged out
         cleanupSessionListener();
-        console.log("[FocusSpace] User logged out");
+        console.log("[Flow] User logged out");
       }
     }
   });
@@ -456,10 +467,7 @@ async function handleStoreCredentials(
   // Update current user and set up session listener
   currentUserId = credentials.uid;
   setupSessionListener(credentials.uid);
-  console.log(
-    "[FocusSpace] Auth credentials stored for user:",
-    credentials.uid
-  );
+  console.log("[Flow] Auth credentials stored for user:", credentials.uid);
 }
 
 /**
@@ -471,9 +479,9 @@ async function handleClearCredentials(): Promise<void> {
   if (currentSession && currentUserId && currentSession.status === "active") {
     try {
       await stopActiveSession(currentUserId, currentSession.id);
-      console.log("[FocusSpace] Active session stopped on logout");
+      console.log("[Flow] Active session stopped on logout");
     } catch (error) {
-      console.error("[FocusSpace] Error stopping session on logout:", error);
+      console.error("[Flow] Error stopping session on logout:", error);
     }
   }
 
@@ -486,7 +494,7 @@ async function handleClearCredentials(): Promise<void> {
 
   // Clean up session listener
   cleanupSessionListener();
-  console.log("[FocusSpace] Auth credentials cleared");
+  console.log("[Flow] Auth credentials cleared");
 }
 
 /**
@@ -522,7 +530,109 @@ async function notifyAllTabsSessionEnded(): Promise<void> {
         });
     }
   } catch (error) {
-    console.error("[FocusSpace] Error notifying tabs:", error);
+    console.error("[Flow] Error notifying tabs:", error);
+  }
+}
+
+/**
+ * Check if a session was completed (not stopped early) and show congratulations
+ */
+async function checkIfSessionCompleted(
+  userId: string,
+  sessionId: string,
+  previousSession: FocusSession
+): Promise<void> {
+  try {
+    const firebaseApp = initializeFirebaseApp();
+    const db = getFirestore(firebaseApp);
+
+    const sessionRef = doc(db, "users", userId, "sessions", sessionId);
+    const sessionDoc = await getDoc(sessionRef);
+
+    if (sessionDoc.exists()) {
+      const sessionData = sessionDoc.data();
+      // Check if session was completed (not stopped)
+      if (sessionData.status === "completed") {
+        console.log("[Flow] Session completed! Showing congratulations.");
+        notifyAllTabsSessionComplete(
+          previousSession.durationMinutes,
+          sessionData.tabSwitchAttempts || 0
+        );
+      }
+    }
+  } catch (error) {
+    console.error("[Flow] Error checking session completion:", error);
+  }
+}
+
+/**
+ * Notify all tabs to show the session complete congratulations overlay
+ */
+async function notifyAllTabsSessionComplete(
+  durationMinutes: number,
+  blockedAttempts: number
+): Promise<void> {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    // Show on the active tab first
+    for (const tab of tabs) {
+      if (!tab.id) continue;
+      chrome.tabs
+        .sendMessage(tab.id, {
+          type: "SHOW_SESSION_COMPLETE",
+          durationMinutes,
+          blockedAttempts,
+        })
+        .catch(() => {
+          // Content script might not be loaded, try injecting
+          injectAndShowCongratulations(
+            tab.id!,
+            durationMinutes,
+            blockedAttempts
+          );
+        });
+    }
+  } catch (error) {
+    console.error("[Flow] Error showing session complete:", error);
+  }
+}
+
+/**
+ * Inject content script and show congratulations overlay
+ */
+async function injectAndShowCongratulations(
+  tabId: number,
+  durationMinutes: number,
+  blockedAttempts: number
+): Promise<void> {
+  try {
+    await chrome.scripting.insertCSS({
+      target: { tabId },
+      files: ["dist/content/overlay.css"],
+    });
+
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ["dist/content/blocking-overlay.js"],
+    });
+
+    setTimeout(() => {
+      chrome.tabs
+        .sendMessage(tabId, {
+          type: "SHOW_SESSION_COMPLETE",
+          durationMinutes,
+          blockedAttempts,
+        })
+        .catch(() => {
+          console.log("[Flow] Could not show congratulations on tab:", tabId);
+        });
+    }, 100);
+  } catch (error) {
+    console.log(
+      "[Flow] Could not inject congratulations into tab:",
+      tabId,
+      error
+    );
   }
 }
 
@@ -535,10 +645,10 @@ chrome.webNavigation.onCommitted.addListener((details) => {
   if (details.frameId !== 0) return;
 
   if (shouldBlockUrl(details.url, currentSession)) {
-    console.log("[FocusSpace] Page committed, showing overlay:", details.url);
+    console.log("[Flow] Page committed, showing overlay:", details.url);
 
-    // Log the attempt if not already logged
-    if (currentSession && currentUserId) {
+    // Only log the attempt if this is a NEW navigation (not a pre-opened tab)
+    if (currentSession && currentUserId && !preOpenedUrls.has(details.url)) {
       logTabSwitchAttempt(currentUserId, currentSession.id, details.url);
     }
 

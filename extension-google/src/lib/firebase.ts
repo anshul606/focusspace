@@ -68,7 +68,7 @@ export function getFirebaseDb(): Firestore {
 /**
  * Storage key for auth credentials
  */
-const AUTH_STORAGE_KEY = "focusspace_auth_credentials";
+const AUTH_STORAGE_KEY = "flow_auth_credentials";
 
 /**
  * Get stored auth credentials from chrome.storage.local

@@ -138,7 +138,7 @@ export default function LoginPage() {
           <div className="flex items-center gap-3 mb-8">
             <FocusIcon className="w-10 h-10 text-indigo-400" />
             <span className="text-2xl font-semibold text-white tracking-tight">
-              FocusSpace
+              Flow
             </span>
           </div>
 
@@ -181,7 +181,7 @@ export default function LoginPage() {
           <div className="flex items-center gap-2 mb-8 lg:hidden">
             <FocusIcon className="w-8 h-8 text-indigo-400" />
             <span className="text-xl font-semibold text-white tracking-tight">
-              FocusSpace
+              Flow
             </span>
           </div>
 

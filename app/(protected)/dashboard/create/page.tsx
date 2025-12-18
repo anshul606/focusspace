@@ -180,7 +180,7 @@ export default function CreateSessionPage() {
       );
 
       // Clear the draft since session was created successfully
-      localStorage.removeItem("focusspace-draft-session");
+      localStorage.removeItem("flow-draft-session");
 
       toast.success("Focus session started! Time to get in the zone.");
       router.push("/dashboard");

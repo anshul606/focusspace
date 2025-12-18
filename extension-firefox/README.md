@@ -1,6 +1,6 @@
-# FocusSpace Firefox Extension
+# Flow Firefox Extension
 
-Firefox version of the FocusSpace browser extension.
+Firefox version of the Flow browser extension.
 
 ## Build
 
@@ -21,7 +21,7 @@ npm run build
 
 ```bash
 cd extension-firefox
-zip -r ../focusspace-firefox.zip . -x "node_modules/*" -x "src/*" -x "*.ts" -x ".DS_Store"
+zip -r ../flow-firefox.zip . -x "node_modules/*" -x "src/*" -x "*.ts" -x ".DS_Store"
 ```
 
 Then submit the zip to [Firefox Add-ons](https://addons.mozilla.org/).

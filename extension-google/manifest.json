@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "FocusSpace - Focus Session Blocker",
+  "name": "Flow - Focus Session Blocker",
   "version": "1.0.0",
   "description": "Enforce website restrictions during focus sessions to maintain productivity",
   "permissions": ["storage", "tabs", "webNavigation", "activeTab", "scripting"],
@@ -28,7 +28,7 @@
       "matches": [
         "http://localhost/*",
         "http://127.0.0.1/*",
-        "https://*.focusspace.app/*",
+        "https://*.anshul.space/*",
         "https://*.vercel.app/*"
       ],
       "js": ["dist/content/auth-sync.js"],
@@ -39,7 +39,7 @@
     "matches": [
       "http://localhost/*",
       "http://127.0.0.1/*",
-      "https://*.focusspace.app/*",
+      "https://*.anshul.space/*",
       "https://*.vercel.app/*"
     ]
   },

@@ -1,5 +1,5 @@
 /**
- * Background Script for FocusSpace Firefox Extension
+ * Background Script for Flow Firefox Extension
  */
 
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
@@ -19,7 +19,7 @@ import {
   Unsubscribe,
 } from "firebase/firestore";
 import { FocusSession, StoredAuthCredentials } from "../lib/types";
-import { shouldBlockUrl } from "../lib/url-blocker";
+import { shouldBlockUrl, fetchAllowedDomains } from "../lib/url-blocker";
 import { browserAPI } from "../lib/browser-polyfill";
 
 const firebaseConfig = {
@@ -36,7 +36,10 @@ let currentSession: FocusSession | null = null;
 let currentUserId: string | null = null;
 let sessionUnsubscribe: Unsubscribe | null = null;
 
-const AUTH_STORAGE_KEY = "focusspace_auth_credentials";
+const AUTH_STORAGE_KEY = "flow_auth_credentials";
+
+// Track URLs that were already open when session started (don't log these as attempts)
+const preOpenedUrls = new Set<string>();
 
 function initializeFirebaseApp(): FirebaseApp {
   if (!app) {
@@ -83,8 +86,14 @@ function setupSessionListener(userId: string): void {
       const previousSession = currentSession;
 
       if (snapshot.empty) {
+        // Check if previous session was completed (not just stopped/cancelled)
+        if (previousSession && previousSession.status === "active") {
+          checkIfSessionCompleted(userId, previousSession.id, previousSession);
+        }
+
         currentSession = null;
-        console.log("[FocusSpace] No active session");
+        console.log("[Flow] No active session");
+        preOpenedUrls.clear();
         notifyAllTabsSessionEnded();
       } else {
         const docData = snapshot.docs[0];
@@ -92,7 +101,7 @@ function setupSessionListener(userId: string): void {
           id: docData.id,
           ...docData.data(),
         } as FocusSession;
-        console.log("[FocusSpace] Active session loaded:", currentSession.id);
+        console.log("[Flow] Active session loaded:", currentSession.id);
 
         if (
           !previousSession ||
@@ -105,7 +114,7 @@ function setupSessionListener(userId: string): void {
       }
     },
     (error) => {
-      console.error("[FocusSpace] Error listening to session:", error);
+      console.error("[Flow] Error listening to session:", error);
       currentSession = null;
     }
   );
@@ -121,16 +130,21 @@ function cleanupSessionListener(): void {
 }
 
 async function initialize(): Promise<void> {
-  console.log("[FocusSpace] Initializing Firefox background script");
+  console.log("[Flow] Initializing Firefox background script");
+
+  // Fetch allowed domains from server on startup
+  fetchAllowedDomains().catch((err) => {
+    console.warn("[Flow] Failed to fetch allowed domains on init:", err);
+  });
 
   const credentials = await getStoredCredentials();
 
   if (credentials) {
     currentUserId = credentials.uid;
     setupSessionListener(credentials.uid);
-    console.log("[FocusSpace] Authenticated as user:", credentials.uid);
+    console.log("[Flow] Authenticated as user:", credentials.uid);
   } else {
-    console.log("[FocusSpace] No stored credentials - waiting for login");
+    console.log("[Flow] No stored credentials - waiting for login");
   }
 }
 
@@ -140,16 +154,19 @@ async function checkAllOpenTabs(): Promise<void> {
   try {
     const tabs = await browserAPI.tabs.query({});
 
+    // Clear and rebuild the pre-opened URLs set
+    preOpenedUrls.clear();
+
     for (const tab of tabs) {
       if (!tab.id || !tab.url) continue;
 
       if (shouldBlockUrl(tab.url, currentSession)) {
-        console.log("[FocusSpace] Blocking already open tab:", tab.url);
+        console.log("[Flow] Blocking already open tab:", tab.url);
 
-        if (currentUserId) {
-          logTabSwitchAttempt(currentUserId, currentSession.id, tab.url);
-        }
+        // Mark this URL as pre-opened (don't log as attempt)
+        preOpenedUrls.add(tab.url);
 
+        // Send message to show overlay (but don't log the attempt)
         browserAPI.tabs
           .sendMessage(tab.id, {
             type: "SHOW_BLOCKING_OVERLAY",
@@ -162,7 +179,7 @@ async function checkAllOpenTabs(): Promise<void> {
       }
     }
   } catch (error) {
-    console.error("[FocusSpace] Error checking open tabs:", error);
+    console.error("[Flow] Error checking open tabs:", error);
   }
 }
 
@@ -187,15 +204,11 @@ async function injectBlockingOverlay(
           session: currentSession,
         })
         .catch(() => {
-          console.log("[FocusSpace] Could not show overlay on tab:", tabId);
+          console.log("[Flow] Could not show overlay on tab:", tabId);
         });
     }, 100);
   } catch (error) {
-    console.log(
-      "[FocusSpace] Could not inject overlay into tab:",
-      tabId,
-      error
-    );
+    console.log("[Flow] Could not inject overlay into tab:", tabId, error);
   }
 }
 
@@ -224,9 +237,9 @@ async function logTabSwitchAttempt(
 
     await incrementTabSwitchAttempts(userId, sessionId);
 
-    console.log("[FocusSpace] Logged tab switch attempt:", attemptedUrl);
+    console.log("[Flow] Logged tab switch attempt:", attemptedUrl);
   } catch (error) {
-    console.error("[FocusSpace] Error logging tab switch attempt:", error);
+    console.error("[Flow] Error logging tab switch attempt:", error);
   }
 }
 
@@ -248,10 +261,7 @@ async function incrementTabSwitchAttempts(
       });
     }
   } catch (error) {
-    console.error(
-      "[FocusSpace] Error incrementing tab switch attempts:",
-      error
-    );
+    console.error("[Flow] Error incrementing tab switch attempts:", error);
   }
 }
 
@@ -265,10 +275,10 @@ function setupAuthListener(): void {
       if (newCredentials && newCredentials.expiresAt > Date.now()) {
         currentUserId = newCredentials.uid;
         setupSessionListener(newCredentials.uid);
-        console.log("[FocusSpace] User logged in:", newCredentials.uid);
+        console.log("[Flow] User logged in:", newCredentials.uid);
       } else {
         cleanupSessionListener();
-        console.log("[FocusSpace] User logged out");
+        console.log("[Flow] User logged out");
       }
     }
   });
@@ -284,7 +294,107 @@ async function notifyAllTabsSessionEnded(): Promise<void> {
         .catch(() => {});
     }
   } catch (error) {
-    console.error("[FocusSpace] Error notifying tabs:", error);
+    console.error("[Flow] Error notifying tabs:", error);
+  }
+}
+
+/**
+ * Check if a session was completed (not stopped early) and show congratulations
+ */
+async function checkIfSessionCompleted(
+  userId: string,
+  sessionId: string,
+  previousSession: FocusSession
+): Promise<void> {
+  try {
+    const firebaseApp = initializeFirebaseApp();
+    const db = getFirestore(firebaseApp);
+
+    const sessionRef = doc(db, "users", userId, "sessions", sessionId);
+    const sessionDoc = await getDoc(sessionRef);
+
+    if (sessionDoc.exists()) {
+      const sessionData = sessionDoc.data();
+      if (sessionData.status === "completed") {
+        console.log("[Flow] Session completed! Showing congratulations.");
+        notifyAllTabsSessionComplete(
+          previousSession.durationMinutes,
+          sessionData.tabSwitchAttempts || 0
+        );
+      }
+    }
+  } catch (error) {
+    console.error("[Flow] Error checking session completion:", error);
+  }
+}
+
+/**
+ * Notify all tabs to show the session complete congratulations overlay
+ */
+async function notifyAllTabsSessionComplete(
+  durationMinutes: number,
+  blockedAttempts: number
+): Promise<void> {
+  try {
+    const tabs = await browserAPI.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+    for (const tab of tabs) {
+      if (!tab.id) continue;
+      browserAPI.tabs
+        .sendMessage(tab.id, {
+          type: "SHOW_SESSION_COMPLETE",
+          durationMinutes,
+          blockedAttempts,
+        })
+        .catch(() => {
+          injectAndShowCongratulations(
+            tab.id!,
+            durationMinutes,
+            blockedAttempts
+          );
+        });
+    }
+  } catch (error) {
+    console.error("[Flow] Error showing session complete:", error);
+  }
+}
+
+/**
+ * Inject content script and show congratulations overlay
+ */
+async function injectAndShowCongratulations(
+  tabId: number,
+  durationMinutes: number,
+  blockedAttempts: number
+): Promise<void> {
+  try {
+    await browserAPI.tabs.insertCSS(tabId, {
+      file: "dist/content/overlay.css",
+    });
+
+    await browserAPI.tabs.executeScript(tabId, {
+      file: "dist/content/blocking-overlay.js",
+    });
+
+    setTimeout(() => {
+      browserAPI.tabs
+        .sendMessage(tabId, {
+          type: "SHOW_SESSION_COMPLETE",
+          durationMinutes,
+          blockedAttempts,
+        })
+        .catch(() => {
+          console.log("[Flow] Could not show congratulations on tab:", tabId);
+        });
+    }, 100);
+  } catch (error) {
+    console.log(
+      "[Flow] Could not inject congratulations into tab:",
+      tabId,
+      error
+    );
   }
 }
 
@@ -299,19 +409,16 @@ async function handleStoreCredentials(
 
   currentUserId = credentials.uid;
   setupSessionListener(credentials.uid);
-  console.log(
-    "[FocusSpace] Auth credentials stored for user:",
-    credentials.uid
-  );
+  console.log("[Flow] Auth credentials stored for user:", credentials.uid);
 }
 
 async function handleClearCredentials(): Promise<void> {
   if (currentSession && currentUserId && currentSession.status === "active") {
     try {
       await stopActiveSession(currentUserId, currentSession.id);
-      console.log("[FocusSpace] Active session stopped on logout");
+      console.log("[Flow] Active session stopped on logout");
     } catch (error) {
-      console.error("[FocusSpace] Error stopping session on logout:", error);
+      console.error("[Flow] Error stopping session on logout:", error);
     }
   }
 
@@ -322,7 +429,7 @@ async function handleClearCredentials(): Promise<void> {
   });
 
   cleanupSessionListener();
-  console.log("[FocusSpace] Auth credentials cleared");
+  console.log("[Flow] Auth credentials cleared");
 }
 
 async function stopActiveSession(
@@ -381,9 +488,10 @@ browserAPI.webNavigation.onBeforeNavigate.addListener((details) => {
   if (details.frameId !== 0) return;
 
   if (shouldBlockUrl(details.url, currentSession)) {
-    console.log("[FocusSpace] Blocking navigation to:", details.url);
+    console.log("[Flow] Blocking navigation to:", details.url);
 
-    if (currentSession && currentUserId) {
+    // Only log the attempt if this is a NEW navigation (not a pre-opened tab)
+    if (currentSession && currentUserId && !preOpenedUrls.has(details.url)) {
       logTabSwitchAttempt(currentUserId, currentSession.id, details.url);
     }
   }
@@ -393,9 +501,10 @@ browserAPI.webNavigation.onCommitted.addListener((details) => {
   if (details.frameId !== 0) return;
 
   if (shouldBlockUrl(details.url, currentSession)) {
-    console.log("[FocusSpace] Page committed, showing overlay:", details.url);
+    console.log("[Flow] Page committed, showing overlay:", details.url);
 
-    if (currentSession && currentUserId) {
+    // Only log the attempt if this is a NEW navigation (not a pre-opened tab)
+    if (currentSession && currentUserId && !preOpenedUrls.has(details.url)) {
       logTabSwitchAttempt(currentUserId, currentSession.id, details.url);
     }
 

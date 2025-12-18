@@ -1,7 +1,6 @@
 "use strict";
 (() => {
   // src/content/auth-sync.ts
-  var browserAPI = typeof browser !== "undefined" ? browser : chrome;
   var AUTH_STORAGE_KEY = "flow_auth_credentials";
   function isFlowDomain() {
     const hostname = window.location.hostname;
@@ -13,13 +12,13 @@
       if (stored) {
         const credentials = JSON.parse(stored);
         if (credentials && credentials.expiresAt > Date.now()) {
-          browserAPI.runtime.sendMessage(
+          chrome.runtime.sendMessage(
             { type: "STORE_AUTH_CREDENTIALS", credentials },
             (response) => {
-              if (browserAPI.runtime.lastError) {
+              if (chrome.runtime.lastError) {
                 console.warn(
                   "[Flow] Error syncing credentials:",
-                  browserAPI.runtime.lastError.message
+                  chrome.runtime.lastError.message
                 );
               } else if (response?.success) {
                 console.log("[Flow] Credentials synced from localStorage");
@@ -36,13 +35,13 @@
     window.addEventListener("flow-auth-update", (event) => {
       const credentials = event.detail;
       if (credentials) {
-        browserAPI.runtime.sendMessage(
+        chrome.runtime.sendMessage(
           { type: "STORE_AUTH_CREDENTIALS", credentials },
           (response) => {
-            if (browserAPI.runtime.lastError) {
+            if (chrome.runtime.lastError) {
               console.warn(
                 "[Flow] Error storing credentials:",
-                browserAPI.runtime.lastError.message
+                chrome.runtime.lastError.message
               );
             } else if (response?.success) {
               console.log("[Flow] Auth credentials updated");
@@ -52,13 +51,13 @@
       }
     });
     window.addEventListener("flow-auth-clear", () => {
-      browserAPI.runtime.sendMessage(
+      chrome.runtime.sendMessage(
         { type: "CLEAR_AUTH_CREDENTIALS" },
         (response) => {
-          if (browserAPI.runtime.lastError) {
+          if (chrome.runtime.lastError) {
             console.warn(
               "[Flow] Error clearing credentials:",
-              browserAPI.runtime.lastError.message
+              chrome.runtime.lastError.message
             );
           } else if (response?.success) {
             console.log("[Flow] Auth credentials cleared");
@@ -72,10 +71,10 @@
           try {
             const credentials = JSON.parse(event.newValue);
             if (credentials && credentials.expiresAt > Date.now()) {
-              browserAPI.runtime.sendMessage(
+              chrome.runtime.sendMessage(
                 { type: "STORE_AUTH_CREDENTIALS", credentials },
                 () => {
-                  if (browserAPI.runtime.lastError) {
+                  if (chrome.runtime.lastError) {
                   }
                 }
               );
@@ -83,13 +82,10 @@
           } catch {
           }
         } else {
-          browserAPI.runtime.sendMessage(
-            { type: "CLEAR_AUTH_CREDENTIALS" },
-            () => {
-              if (browserAPI.runtime.lastError) {
-              }
+          chrome.runtime.sendMessage({ type: "CLEAR_AUTH_CREDENTIALS" }, () => {
+            if (chrome.runtime.lastError) {
             }
-          );
+          });
         }
       }
     });

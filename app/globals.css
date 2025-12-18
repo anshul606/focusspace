@@ -106,7 +106,7 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  /* FocusSpace sidebar - zinc-950 base with indigo accents */
+  /* Flow sidebar - zinc-950 base with indigo accents */
   --sidebar: oklch(0.09 0.005 285);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.585 0.233 277);
@@ -117,7 +117,7 @@
   --sidebar-ring: oklch(0.585 0.233 277);
 }
 
-/* FocusSpace default theme - always dark */
+/* Flow default theme - always dark */
 :root {
   /* Override light mode sidebar to match dark theme */
   --sidebar: oklch(0.09 0.005 285);

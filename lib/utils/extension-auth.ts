@@ -1,9 +1,9 @@
 /**
  * Extension Auth Sync Utilities
- * Handles sharing authentication credentials between the web app and Chrome extension
+ * Handles sharing authentication credentials between the web app and Flow extension
  *
  * Requirements:
- * - 7.2: Provide authentication credentials to the Chrome extension
+ * - 7.2: Provide authentication credentials to the extension
  * - 7.3: Extension uses credentials for all Firebase operations
  */
 
@@ -12,10 +12,10 @@ import { User } from "firebase/auth";
 /**
  * Storage key for auth credentials - must match extension's key
  */
-const AUTH_STORAGE_KEY = "focusspace_auth_credentials";
+const AUTH_STORAGE_KEY = "flow_auth_credentials";
 
 /**
- * Extension ID for the FocusSpace Chrome extension
+ * Extension ID for the Flow Chrome extension
  * In production, this would be the actual extension ID from Chrome Web Store
  */
 const EXTENSION_ID = process.env.NEXT_PUBLIC_EXTENSION_ID || "";
@@ -70,7 +70,7 @@ export async function syncAuthToExtension(user: User): Promise<boolean> {
     storeCredentialsLocally(credentials);
     return true;
   } catch (error) {
-    console.error("[FocusSpace] Error syncing auth to extension:", error);
+    console.error("[Flow] Error syncing auth to extension:", error);
     return false;
   }
 }
@@ -89,7 +89,7 @@ async function sendCredentialsToExtension(
         (response) => {
           if (chrome.runtime.lastError) {
             console.warn(
-              "[FocusSpace] Extension messaging error:",
+              "[Flow] Extension messaging error:",
               chrome.runtime.lastError.message
             );
             // Fallback to local storage
@@ -117,10 +117,10 @@ function storeCredentialsLocally(credentials: StoredAuthCredentials): void {
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(credentials));
     // Dispatch a custom event that the extension's content script can listen for
     window.dispatchEvent(
-      new CustomEvent("focusspace-auth-update", { detail: credentials })
+      new CustomEvent("flow-auth-update", { detail: credentials })
     );
   } catch (error) {
-    console.error("[FocusSpace] Error storing credentials locally:", error);
+    console.error("[Flow] Error storing credentials locally:", error);
   }
 }
 
@@ -141,7 +141,7 @@ export async function clearExtensionAuth(): Promise<boolean> {
     clearCredentialsLocally();
     return true;
   } catch (error) {
-    console.error("[FocusSpace] Error clearing extension auth:", error);
+    console.error("[Flow] Error clearing extension auth:", error);
     return false;
   }
 }
@@ -158,7 +158,7 @@ async function sendClearAuthToExtension(): Promise<boolean> {
         (response) => {
           if (chrome.runtime.lastError) {
             console.warn(
-              "[FocusSpace] Extension messaging error:",
+              "[Flow] Extension messaging error:",
               chrome.runtime.lastError.message
             );
             clearCredentialsLocally();
@@ -182,9 +182,9 @@ function clearCredentialsLocally(): void {
   try {
     localStorage.removeItem(AUTH_STORAGE_KEY);
     // Dispatch event for extension content script
-    window.dispatchEvent(new CustomEvent("focusspace-auth-clear"));
+    window.dispatchEvent(new CustomEvent("flow-auth-clear"));
   } catch (error) {
-    console.error("[FocusSpace] Error clearing local credentials:", error);
+    console.error("[Flow] Error clearing local credentials:", error);
   }
 }
 
@@ -213,7 +213,7 @@ export async function refreshExtensionAuth(user: User): Promise<boolean> {
     storeCredentialsLocally(credentials);
     return true;
   } catch (error) {
-    console.error("[FocusSpace] Error refreshing extension auth:", error);
+    console.error("[Flow] Error refreshing extension auth:", error);
     return false;
   }
 }

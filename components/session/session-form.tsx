@@ -34,7 +34,7 @@ const DURATION_PRESETS = [
   { label: "90m", value: 90, description: "Flow state" },
 ];
 
-const STORAGE_KEY = "focusspace-draft-session";
+const STORAGE_KEY = "flow-draft-session";
 
 export function SessionForm({
   onSubmit,

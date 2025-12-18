@@ -5,6 +5,70 @@
 
 import { FocusSession } from "./types";
 
+// Cache for allowed domains fetched from server
+let cachedAllowedDomains: string[] = [
+  "localhost",
+  "127.0.0.1",
+  "vercel.app",
+  "anshul.space",
+];
+let lastFetchTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Fetch allowed domains from the server
+ * Falls back to cached/default values if fetch fails
+ */
+export async function fetchAllowedDomains(): Promise<string[]> {
+  const now = Date.now();
+  if (now - lastFetchTime < CACHE_DURATION && cachedAllowedDomains.length > 0) {
+    return cachedAllowedDomains;
+  }
+
+  try {
+    // Try localhost first (development), then production URLs
+    const urls = [
+      "http://localhost:3001/api/config/allowed-domains",
+      "http://localhost:3000/api/config/allowed-domains",
+      "https://flow.anshul.space/api/config/allowed-domains",
+    ];
+
+    for (const url of urls) {
+      try {
+        const response = await fetch(url, { method: "GET" });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.domains && Array.isArray(data.domains)) {
+            cachedAllowedDomains = data.domains;
+            lastFetchTime = now;
+            console.log(
+              "[Flow] Fetched allowed domains:",
+              cachedAllowedDomains
+            );
+            return cachedAllowedDomains;
+          }
+        }
+      } catch {
+        // Try next URL
+      }
+    }
+  } catch (error) {
+    console.warn(
+      "[Flow] Failed to fetch allowed domains, using cached:",
+      error
+    );
+  }
+
+  return cachedAllowedDomains;
+}
+
+/**
+ * Get the current allowed domains (sync version using cache)
+ */
+export function getAllowedDomains(): string[] {
+  return cachedAllowedDomains;
+}
+
 /**
  * Extracts the hostname from a URL string
  * @param url - The URL to extract hostname from
@@ -170,8 +234,8 @@ export function shouldBlockUrl(
     return false;
   }
 
-  // Always allow the FocusSpace app so users can manage their sessions
-  if (isFocusSpaceApp(url)) {
+  // Always allow the Flow app so users can manage their sessions
+  if (isFlowApp(url)) {
     return false;
   }
 
@@ -225,23 +289,19 @@ export function isInternalUrl(url: string): boolean {
 }
 
 /**
- * FocusSpace app domains that should always be allowed
- * Users need access to manage their sessions
- */
-const FOCUSSPACE_DOMAINS = ["localhost", "127.0.0.1", "vercel.app"];
-
-/**
- * Checks if a URL is the FocusSpace app which should always be allowed
+ * Checks if a URL is the Flow app which should always be allowed
+ * Uses domains fetched from server (cached)
  * @param url - The URL to check
- * @returns true if the URL is the FocusSpace app
+ * @returns true if the URL is the Flow app
  */
-export function isFocusSpaceApp(url: string): boolean {
+export function isFlowApp(url: string): boolean {
   const hostname = extractHostname(url);
   if (!hostname) {
     return false;
   }
 
-  return FOCUSSPACE_DOMAINS.some(
+  const allowedDomains = getAllowedDomains();
+  return allowedDomains.some(
     (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
   );
 }

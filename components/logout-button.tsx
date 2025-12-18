@@ -23,7 +23,7 @@ export default function LogoutButton() {
         const activeSession = await getActiveSession(user.uid);
         if (activeSession) {
           await stopSession(user.uid, activeSession.id);
-          console.log("[FocusSpace] Active session terminated on logout");
+          console.log("[Flow] Active session terminated on logout");
         }
       }
 

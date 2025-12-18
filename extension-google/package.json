@@ -1,7 +1,7 @@
 {
-  "name": "focusspace-extension",
+  "name": "flow-extension",
   "version": "1.0.0",
-  "description": "FocusSpace Chrome Extension",
+  "description": "Flow Chrome Extension",
   "scripts": {
     "build": "node build.js && npm run copy-assets",
     "copy-assets": "cp src/popup/*.html src/popup/*.css dist/popup/ 2>/dev/null || true; cp src/content/*.css dist/content/ 2>/dev/null || true",

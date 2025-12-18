@@ -1,7 +1,6 @@
 "use strict";
 (() => {
   // src/content/blocking-overlay.ts
-  var browserAPI = typeof browser !== "undefined" ? browser : chrome;
   var OVERLAY_ID = "flow-blocking-overlay";
   var overlayElement = null;
   function createBlockingOverlay(blockedUrl) {
@@ -58,13 +57,14 @@
     }
   }
   function truncateUrl(url, maxLength = 60) {
-    if (url.length <= maxLength)
+    if (url.length <= maxLength) {
       return url;
+    }
     return url.substring(0, maxLength - 3) + "...";
   }
   function isExtensionContextValid() {
     try {
-      return !!browserAPI?.runtime?.id;
+      return !!chrome?.runtime?.id;
     } catch {
       return false;
     }
@@ -138,7 +138,7 @@
     if (!isExtensionContextValid())
       return;
     try {
-      browserAPI.runtime.onMessage.addListener(
+      chrome.runtime.onMessage.addListener(
         (message, _sender, sendResponse) => {
           try {
             if (!isExtensionContextValid())
@@ -198,8 +198,9 @@
       }
       const listHostnameNorm = normalizeHostname(listParsed.hostname);
       const hostnameMatches = targetHostnameNorm === listHostnameNorm || targetHostnameNorm.endsWith(`.${listHostnameNorm}`) || listHostnameNorm.endsWith(`.${targetHostnameNorm}`);
-      if (!hostnameMatches)
+      if (!hostnameMatches) {
         return false;
+      }
       if (hasSpecificPath(listUrl, listParsed.pathname)) {
         const targetPath = (targetParsed.pathname + targetParsed.search).replace(
           /\/$/,
@@ -219,9 +220,8 @@
       "chrome:",
       "chrome-extension:",
       "about:",
-      "moz-extension:",
-      "file:",
-      "resource:"
+      "edge:",
+      "brave:"
     ];
     try {
       const parsed = new URL(url);
@@ -251,12 +251,12 @@
   }
   function safeSendMessage(message, callback) {
     try {
-      if (!browserAPI?.runtime?.id)
+      if (!chrome?.runtime?.id)
         return;
-      const runtime = browserAPI.runtime;
+      const runtime = chrome.runtime;
       runtime.sendMessage(message, (response) => {
         try {
-          if (!browserAPI?.runtime?.id)
+          if (!chrome?.runtime?.id)
             return;
           const _err = runtime.lastError;
           if (_err)

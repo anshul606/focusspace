@@ -14159,160 +14159,7 @@ This typically indicates that your device does not have a healthy Internet conne
     registerVersion(w, "4.7.3", "esm2017");
   }();
 
-  // src/lib/url-blocker.ts
-  var cachedAllowedDomains = [
-    "localhost",
-    "127.0.0.1",
-    "vercel.app",
-    "anshul.space"
-  ];
-  var lastFetchTime = 0;
-  var CACHE_DURATION = 5 * 60 * 1e3;
-  async function fetchAllowedDomains() {
-    const now = Date.now();
-    if (now - lastFetchTime < CACHE_DURATION && cachedAllowedDomains.length > 0) {
-      return cachedAllowedDomains;
-    }
-    try {
-      const urls = [
-        "http://localhost:3001/api/config/allowed-domains",
-        "http://localhost:3000/api/config/allowed-domains",
-        "https://flow.anshul.space/api/config/allowed-domains"
-      ];
-      for (const url of urls) {
-        try {
-          const response = await fetch(url, { method: "GET" });
-          if (response.ok) {
-            const data = await response.json();
-            if (data.domains && Array.isArray(data.domains)) {
-              cachedAllowedDomains = data.domains;
-              lastFetchTime = now;
-              console.log(
-                "[Flow] Fetched allowed domains:",
-                cachedAllowedDomains
-              );
-              return cachedAllowedDomains;
-            }
-          }
-        } catch {
-        }
-      }
-    } catch (error) {
-      console.warn(
-        "[Flow] Failed to fetch allowed domains, using cached:",
-        error
-      );
-    }
-    return cachedAllowedDomains;
-  }
-  function getAllowedDomains() {
-    return cachedAllowedDomains;
-  }
-  function extractHostname(url) {
-    try {
-      const parsed = new URL(url);
-      return parsed.hostname.toLowerCase();
-    } catch {
-      return null;
-    }
-  }
-  function parseUrlForMatching(url) {
-    let urlToParse = url;
-    if (!url.includes("://")) {
-      urlToParse = `https://${url}`;
-    }
-    try {
-      const parsed = new URL(urlToParse);
-      return {
-        hostname: parsed.hostname.toLowerCase(),
-        pathname: parsed.pathname + parsed.search,
-        fullUrl: urlToParse.toLowerCase()
-      };
-    } catch {
-      return null;
-    }
-  }
-  function hasSpecificPath(url) {
-    const parsed = parseUrlForMatching(url);
-    if (!parsed)
-      return false;
-    const pathname = parsed.pathname.replace(/\/$/, "");
-    return pathname.length > 0 || parsed.fullUrl.includes("?");
-  }
-  function normalizeHostname(hostname) {
-    return hostname.replace(/^www\./, "").toLowerCase();
-  }
-  function urlMatchesAny(url, urlList) {
-    const targetParsed = parseUrlForMatching(url);
-    if (!targetParsed)
-      return false;
-    const targetHostnameNorm = normalizeHostname(targetParsed.hostname);
-    return urlList.some((listUrl) => {
-      const listParsed = parseUrlForMatching(listUrl);
-      if (!listParsed)
-        return false;
-      const listHostnameNorm = normalizeHostname(listParsed.hostname);
-      const hostnameMatches = targetHostnameNorm === listHostnameNorm || targetHostnameNorm.endsWith(`.${listHostnameNorm}`) || listHostnameNorm.endsWith(`.${targetHostnameNorm}`);
-      if (!hostnameMatches)
-        return false;
-      if (hasSpecificPath(listUrl)) {
-        const targetPath = (targetParsed.pathname + (targetParsed.fullUrl.includes("?") ? targetParsed.fullUrl.split("?")[1] || "" : "")).replace(/\/$/, "");
-        const listPath = (listParsed.pathname + (listParsed.fullUrl.includes("?") ? listParsed.fullUrl.split("?")[1] || "" : "")).replace(/\/$/, "");
-        return targetPath === listPath || targetPath.startsWith(listPath);
-      }
-      return true;
-    });
-  }
-  function shouldBlockUrl(url, session) {
-    if (!session || session.status !== "active")
-      return false;
-    if (isInternalUrl(url))
-      return false;
-    if (isFlowApp(url))
-      return false;
-    const { mode, urls } = session;
-    if (urls.length === 0) {
-      return mode === "allowlist";
-    }
-    const matchesListedUrl = urlMatchesAny(url, urls);
-    if (mode === "allowlist") {
-      return !matchesListedUrl;
-    } else {
-      return matchesListedUrl;
-    }
-  }
-  function isInternalUrl(url) {
-    const internalProtocols = [
-      "chrome:",
-      "chrome-extension:",
-      "about:",
-      "moz-extension:",
-      "file:",
-      "resource:"
-    ];
-    try {
-      const parsed = new URL(url);
-      return internalProtocols.some(
-        (protocol) => parsed.protocol.startsWith(protocol.replace(":", ""))
-      );
-    } catch {
-      return true;
-    }
-  }
-  function isFlowApp(url) {
-    const hostname = extractHostname(url);
-    if (!hostname)
-      return false;
-    const allowedDomains = getAllowedDomains();
-    return allowedDomains.some(
-      (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
-    );
-  }
-
-  // src/lib/browser-polyfill.ts
-  var browserAPI = typeof browser !== "undefined" ? browser : chrome;
-
-  // src/background/background.ts
+  // src/popup/popup.ts
   var firebaseConfig = {
     apiKey: "AIzaSyD5iAXgpdcMhHbnQOvM4NHAVZ0m97vox2A",
     authDomain: "focusspace-aaa5a.firebaseapp.com",
@@ -14321,12 +14168,36 @@ This typically indicates that your device does not have a healthy Internet conne
     messagingSenderId: "356773523134",
     appId: "1:356773523134:web:b48c5ef84412f5975b78ef"
   };
-  var app = null;
-  var currentSession = null;
-  var currentUserId = null;
-  var sessionUnsubscribe = null;
   var AUTH_STORAGE_KEY = "flow_auth_credentials";
-  var preOpenedUrls = /* @__PURE__ */ new Set();
+  var icons = {
+    sparkles: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>`,
+    lock: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+    moon: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`,
+    zap: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+    shield: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>`,
+    shieldOff: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 2 20 20"/><path d="M5 5a1 1 0 0 0-1 1v7c0 5 3.5 7.5 7.67 8.94a1 1 0 0 0 .67.01c2.35-.82 4.48-1.97 5.9-3.71"/><path d="M9.309 3.652A12.252 12.252 0 0 0 11.24 2.28a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1v7a9.784 9.784 0 0 1-.08 1.264"/></svg>`,
+    listTodo: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="6" height="6" rx="1"/><path d="m3 17 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>`,
+    info: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>`,
+    plus: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`
+  };
+  var app = null;
+  var currentUserId = null;
+  var currentSession = null;
+  var sessionUnsubscribe = null;
+  var todosUnsubscribe = null;
+  var timerInterval = null;
+  var isLoadingSession = true;
+  var isLoadingTodos = false;
+  var loadingEl = document.getElementById("loading");
+  var loginPromptEl = document.getElementById("login-prompt");
+  var mainContentEl = document.getElementById("main-content");
+  var sessionStatusEl = document.getElementById("session-status");
+  var todoSectionEl = document.getElementById("todo-section");
+  var todoListEl = document.getElementById("todo-list");
+  var newTodoInputEl = document.getElementById(
+    "new-todo-input"
+  );
+  var addTodoBtnEl = document.getElementById("add-todo-btn");
   function initializeFirebaseApp() {
     if (!app) {
       app = getApps().length ? getApp() : initializeApp(firebaseConfig);
@@ -14335,7 +14206,7 @@ This typically indicates that your device does not have a healthy Internet conne
   }
   async function getStoredCredentials() {
     return new Promise((resolve) => {
-      browserAPI.storage.local.get([AUTH_STORAGE_KEY], (result) => {
+      chrome.storage.local.get([AUTH_STORAGE_KEY], (result) => {
         const credentials = result[AUTH_STORAGE_KEY];
         if (credentials && credentials.expiresAt > Date.now()) {
           resolve(credentials);
@@ -14345,11 +14216,263 @@ This typically indicates that your device does not have a healthy Internet conne
       });
     });
   }
+  function showState(state) {
+    loadingEl.classList.toggle("hidden", state !== "loading");
+    loginPromptEl.classList.toggle("hidden", state !== "login");
+    mainContentEl.classList.toggle("hidden", state !== "main");
+  }
+  function timestampToDate(timestamp) {
+    if ("toDate" in timestamp && typeof timestamp.toDate === "function") {
+      return timestamp.toDate();
+    }
+    return new Date(timestamp.seconds * 1e3);
+  }
+  function calculateRemainingSeconds(session) {
+    const startTime = timestampToDate(session.startedAt).getTime();
+    const endTime = startTime + session.durationMinutes * 60 * 1e3;
+    const remaining = Math.max(0, endTime - Date.now());
+    return Math.floor(remaining / 1e3);
+  }
+  function formatTime(totalSeconds) {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor(totalSeconds % 3600 / 60);
+    const seconds = totalSeconds % 60;
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    }
+    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  }
+  function calculateProgress(session) {
+    const totalSeconds = session.durationMinutes * 60;
+    const remainingSeconds = calculateRemainingSeconds(session);
+    const elapsedSeconds = totalSeconds - remainingSeconds;
+    return Math.min(100, elapsedSeconds / totalSeconds * 100);
+  }
+  function renderSessionStatus() {
+    if (isLoadingSession) {
+      sessionStatusEl.innerHTML = `
+      <div class="session-loading">
+        <div class="loading-spinner"></div>
+        <p>Loading session...</p>
+      </div>
+    `;
+      todoSectionEl.classList.add("hidden");
+      return;
+    }
+    if (!currentSession) {
+      sessionStatusEl.innerHTML = `
+      <div class="no-session">
+        <div class="icon">${icons.moon}</div>
+        <h3>No Active Session</h3>
+        <p>Start a focus session from the web app to begin blocking distractions.</p>
+      </div>
+    `;
+      todoSectionEl.classList.add("hidden");
+      return;
+    }
+    const remainingSeconds = calculateRemainingSeconds(currentSession);
+    const progress = calculateProgress(currentSession);
+    const modeLabel = currentSession.mode === "allowlist" ? "Allowlist" : "Blocklist";
+    const modeIcon = currentSession.mode === "allowlist" ? icons.shield : icons.shieldOff;
+    sessionStatusEl.innerHTML = `
+    <div class="session-card">
+      <div class="session-header">
+        <span class="mode-badge ${currentSession.mode}">
+          ${modeIcon} ${modeLabel}
+        </span>
+        <span class="status-indicator">
+          <span class="dot"></span>
+          Active
+        </span>
+      </div>
+      
+      <div class="timer-display">
+        <div class="time" id="timer-value">${formatTime(remainingSeconds)}</div>
+        <div class="label">remaining</div>
+      </div>
+      
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: ${progress}%"></div>
+        </div>
+      </div>
+      
+      <div class="session-info">
+        <div class="info-row">
+          <span class="label">Duration</span>
+          <span class="value">${currentSession.durationMinutes} min</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Blocked attempts</span>
+          <span class="value">${currentSession.tabSwitchAttempts}</span>
+        </div>
+      </div>
+      
+      ${currentSession.urls.length > 0 ? `
+        <div class="url-list">
+          <h4>${currentSession.mode === "allowlist" ? "Allowed Sites" : "Blocked Sites"}</h4>
+          <div class="urls">
+            ${currentSession.urls.slice(0, 5).map(
+      (url) => `
+              <span class="url-chip">${truncateUrl(url)}</span>
+            `
+    ).join("")}
+            ${currentSession.urls.length > 5 ? `
+              <span class="url-chip">+${currentSession.urls.length - 5} more</span>
+            ` : ""}
+          </div>
+        </div>
+      ` : ""}
+      
+      <div class="web-only-notice">
+        ${icons.info} Sessions can only be stopped from the web app
+      </div>
+    </div>
+  `;
+    todoSectionEl.classList.remove("hidden");
+    startTimerUpdates();
+  }
+  function truncateUrl(url) {
+    try {
+      const parsed = new URL(url);
+      return parsed.hostname;
+    } catch {
+      return url.length > 20 ? url.substring(0, 20) + "..." : url;
+    }
+  }
+  function startTimerUpdates() {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+    }
+    timerInterval = window.setInterval(() => {
+      if (!currentSession) {
+        if (timerInterval)
+          clearInterval(timerInterval);
+        return;
+      }
+      const timerEl = document.getElementById("timer-value");
+      const progressEl = document.querySelector(".progress-fill");
+      if (timerEl) {
+        const remainingSeconds = calculateRemainingSeconds(currentSession);
+        timerEl.textContent = formatTime(remainingSeconds);
+        if (progressEl) {
+          const progress = calculateProgress(currentSession);
+          progressEl.style.width = `${progress}%`;
+        }
+        if (remainingSeconds <= 0) {
+          if (timerInterval)
+            clearInterval(timerInterval);
+          renderSessionStatus();
+        }
+      }
+    }, 1e3);
+  }
+  function renderTodos(todos) {
+    if (isLoadingTodos) {
+      todoListEl.innerHTML = `
+      <div class="todo-loading">
+        <div class="loading-spinner small"></div>
+        <p>Loading tasks...</p>
+      </div>
+    `;
+      return;
+    }
+    if (todos.length === 0) {
+      todoListEl.innerHTML = `
+      <div class="todo-empty">
+        No tasks yet. Add one below!
+      </div>
+    `;
+      return;
+    }
+    todoListEl.innerHTML = todos.map(
+      (todo) => `
+    <div class="todo-item ${todo.completed ? "completed" : ""}" data-id="${todo.id}">
+      <input 
+        type="checkbox" 
+        ${todo.completed ? "checked" : ""} 
+        data-todo-id="${todo.id}"
+      >
+      <span class="todo-text">${escapeHtml(todo.text)}</span>
+    </div>
+  `
+    ).join("");
+    todoListEl.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+      checkbox.addEventListener("change", handleTodoToggle);
+    });
+  }
+  function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+  }
+  async function handleTodoToggle(event) {
+    const checkbox = event.target;
+    const todoId = checkbox.dataset.todoId;
+    if (!todoId || !currentUserId || !currentSession)
+      return;
+    try {
+      const firebaseApp = initializeFirebaseApp();
+      const db = getFirestore(firebaseApp);
+      const todoRef = doc(
+        db,
+        "users",
+        currentUserId,
+        "sessions",
+        currentSession.id,
+        "todos",
+        todoId
+      );
+      const todoDoc = await getDoc(todoRef);
+      if (todoDoc.exists()) {
+        const currentCompleted = todoDoc.data().completed;
+        await updateDoc(todoRef, {
+          completed: !currentCompleted,
+          completedAt: !currentCompleted ? Timestamp.now() : null
+        });
+      }
+    } catch (error) {
+      console.error("[Flow] Error toggling todo:", error);
+      checkbox.checked = !checkbox.checked;
+    }
+  }
+  async function handleAddTodo() {
+    const text = newTodoInputEl.value.trim();
+    if (!text || !currentUserId || !currentSession)
+      return;
+    addTodoBtnEl.setAttribute("disabled", "true");
+    try {
+      const firebaseApp = initializeFirebaseApp();
+      const db = getFirestore(firebaseApp);
+      const todosRef = collection(
+        db,
+        "users",
+        currentUserId,
+        "sessions",
+        currentSession.id,
+        "todos"
+      );
+      await addDoc(todosRef, {
+        sessionId: currentSession.id,
+        userId: currentUserId,
+        text,
+        completed: false,
+        createdAt: Timestamp.now(),
+        completedAt: null
+      });
+      newTodoInputEl.value = "";
+    } catch (error) {
+      console.error("[Flow] Error adding todo:", error);
+    } finally {
+      addTodoBtnEl.removeAttribute("disabled");
+    }
+  }
   function setupSessionListener(userId) {
     if (sessionUnsubscribe) {
       sessionUnsubscribe();
-      sessionUnsubscribe = null;
     }
+    isLoadingSession = true;
+    renderSessionStatus();
     const firebaseApp = initializeFirebaseApp();
     const db = getFirestore(firebaseApp);
     const sessionsRef = collection(db, "users", userId, "sessions");
@@ -14362,359 +14485,91 @@ This typically indicates that your device does not have a healthy Internet conne
     sessionUnsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const previousSession = currentSession;
+        isLoadingSession = false;
         if (snapshot.empty) {
-          if (previousSession && previousSession.status === "active") {
-            checkIfSessionCompleted(userId, previousSession.id, previousSession);
-          }
           currentSession = null;
-          console.log("[Flow] No active session");
-          preOpenedUrls.clear();
-          notifyAllTabsSessionEnded();
+          if (todosUnsubscribe) {
+            todosUnsubscribe();
+            todosUnsubscribe = null;
+          }
         } else {
           const docData = snapshot.docs[0];
           currentSession = {
             id: docData.id,
             ...docData.data()
           };
-          console.log("[Flow] Active session loaded:", currentSession.id);
-          if (!previousSession || previousSession.id !== currentSession.id || JSON.stringify(previousSession.urls) !== JSON.stringify(currentSession.urls)) {
-            checkAllOpenTabs();
-          }
+          setupTodosListener(userId, currentSession.id);
         }
+        renderSessionStatus();
       },
       (error) => {
         console.error("[Flow] Error listening to session:", error);
+        isLoadingSession = false;
         currentSession = null;
+        renderSessionStatus();
       }
     );
   }
-  function cleanupSessionListener() {
-    if (sessionUnsubscribe) {
-      sessionUnsubscribe();
-      sessionUnsubscribe = null;
+  function setupTodosListener(userId, sessionId) {
+    if (todosUnsubscribe) {
+      todosUnsubscribe();
     }
-    currentSession = null;
-    currentUserId = null;
-  }
-  async function initialize() {
-    console.log("[Flow] Initializing Firefox background script");
-    fetchAllowedDomains().catch((err) => {
-      console.warn("[Flow] Failed to fetch allowed domains on init:", err);
-    });
-    const credentials = await getStoredCredentials();
-    if (credentials) {
-      currentUserId = credentials.uid;
-      setupSessionListener(credentials.uid);
-      console.log("[Flow] Authenticated as user:", credentials.uid);
-    } else {
-      console.log("[Flow] No stored credentials - waiting for login");
-    }
-  }
-  async function checkAllOpenTabs() {
-    if (!currentSession || currentSession.status !== "active")
-      return;
-    try {
-      const tabs = await browserAPI.tabs.query({});
-      preOpenedUrls.clear();
-      for (const tab of tabs) {
-        if (!tab.id || !tab.url)
-          continue;
-        if (shouldBlockUrl(tab.url, currentSession)) {
-          console.log("[Flow] Blocking already open tab:", tab.url);
-          preOpenedUrls.add(tab.url);
-          browserAPI.tabs.sendMessage(tab.id, {
-            type: "SHOW_BLOCKING_OVERLAY",
-            url: tab.url,
-            session: currentSession
-          }).catch(() => {
-            injectBlockingOverlay(tab.id, tab.url);
-          });
-        }
-      }
-    } catch (error) {
-      console.error("[Flow] Error checking open tabs:", error);
-    }
-  }
-  async function injectBlockingOverlay(tabId, url) {
-    try {
-      await browserAPI.tabs.insertCSS(tabId, {
-        file: "dist/content/overlay.css"
-      });
-      await browserAPI.tabs.executeScript(tabId, {
-        file: "dist/content/blocking-overlay.js"
-      });
-      setTimeout(() => {
-        browserAPI.tabs.sendMessage(tabId, {
-          type: "SHOW_BLOCKING_OVERLAY",
-          url,
-          session: currentSession
-        }).catch(() => {
-          console.log("[Flow] Could not show overlay on tab:", tabId);
-        });
-      }, 100);
-    } catch (error) {
-      console.log("[Flow] Could not inject overlay into tab:", tabId, error);
-    }
-  }
-  async function logTabSwitchAttempt(userId, sessionId, attemptedUrl) {
-    try {
-      const firebaseApp = initializeFirebaseApp();
-      const db = getFirestore(firebaseApp);
-      const attemptsRef = collection(
-        db,
-        "users",
-        userId,
-        "sessions",
-        sessionId,
-        "attempts"
-      );
-      await addDoc(attemptsRef, {
-        attemptedUrl,
-        timestamp: Timestamp.now()
-      });
-      await incrementTabSwitchAttempts(userId, sessionId);
-      console.log("[Flow] Logged tab switch attempt:", attemptedUrl);
-    } catch (error) {
-      console.error("[Flow] Error logging tab switch attempt:", error);
-    }
-  }
-  async function incrementTabSwitchAttempts(userId, sessionId) {
-    try {
-      const firebaseApp = initializeFirebaseApp();
-      const db = getFirestore(firebaseApp);
-      const sessionRef = doc(db, "users", userId, "sessions", sessionId);
-      const sessionDoc = await getDoc(sessionRef);
-      if (sessionDoc.exists()) {
-        const currentAttempts = sessionDoc.data().tabSwitchAttempts || 0;
-        await updateDoc(sessionRef, {
-          tabSwitchAttempts: currentAttempts + 1
-        });
-      }
-    } catch (error) {
-      console.error("[Flow] Error incrementing tab switch attempts:", error);
-    }
-  }
-  function setupAuthListener() {
-    browserAPI.storage.onChanged.addListener((changes, areaName) => {
-      if (areaName === "local" && changes[AUTH_STORAGE_KEY]) {
-        const newCredentials = changes[AUTH_STORAGE_KEY].newValue;
-        if (newCredentials && newCredentials.expiresAt > Date.now()) {
-          currentUserId = newCredentials.uid;
-          setupSessionListener(newCredentials.uid);
-          console.log("[Flow] User logged in:", newCredentials.uid);
-        } else {
-          cleanupSessionListener();
-          console.log("[Flow] User logged out");
-        }
-      }
-    });
-  }
-  async function notifyAllTabsSessionEnded() {
-    try {
-      const tabs = await browserAPI.tabs.query({});
-      for (const tab of tabs) {
-        if (!tab.id)
-          continue;
-        browserAPI.tabs.sendMessage(tab.id, { type: "REMOVE_BLOCKING_OVERLAY" }).catch(() => {
-        });
-      }
-    } catch (error) {
-      console.error("[Flow] Error notifying tabs:", error);
-    }
-  }
-  async function checkIfSessionCompleted(userId, sessionId, previousSession) {
-    try {
-      const firebaseApp = initializeFirebaseApp();
-      const db = getFirestore(firebaseApp);
-      const sessionRef = doc(db, "users", userId, "sessions", sessionId);
-      const sessionDoc = await getDoc(sessionRef);
-      if (sessionDoc.exists()) {
-        const sessionData = sessionDoc.data();
-        if (sessionData.status === "completed") {
-          console.log("[Flow] Session completed! Showing congratulations.");
-          notifyAllTabsSessionComplete(
-            previousSession.durationMinutes,
-            sessionData.tabSwitchAttempts || 0
-          );
-        }
-      }
-    } catch (error) {
-      console.error("[Flow] Error checking session completion:", error);
-    }
-  }
-  async function notifyAllTabsSessionComplete(durationMinutes, blockedAttempts) {
-    try {
-      const tabs = await browserAPI.tabs.query({
-        active: true,
-        currentWindow: true
-      });
-      for (const tab of tabs) {
-        if (!tab.id)
-          continue;
-        browserAPI.tabs.sendMessage(tab.id, {
-          type: "SHOW_SESSION_COMPLETE",
-          durationMinutes,
-          blockedAttempts
-        }).catch(() => {
-          injectAndShowCongratulations(
-            tab.id,
-            durationMinutes,
-            blockedAttempts
-          );
-        });
-      }
-    } catch (error) {
-      console.error("[Flow] Error showing session complete:", error);
-    }
-  }
-  async function injectAndShowCongratulations(tabId, durationMinutes, blockedAttempts) {
-    try {
-      await browserAPI.tabs.insertCSS(tabId, {
-        file: "dist/content/overlay.css"
-      });
-      await browserAPI.tabs.executeScript(tabId, {
-        file: "dist/content/blocking-overlay.js"
-      });
-      setTimeout(() => {
-        browserAPI.tabs.sendMessage(tabId, {
-          type: "SHOW_SESSION_COMPLETE",
-          durationMinutes,
-          blockedAttempts
-        }).catch(() => {
-          console.log("[Flow] Could not show congratulations on tab:", tabId);
-        });
-      }, 100);
-    } catch (error) {
-      console.log(
-        "[Flow] Could not inject congratulations into tab:",
-        tabId,
-        error
-      );
-    }
-  }
-  async function handleStoreCredentials(credentials) {
-    await new Promise((resolve) => {
-      browserAPI.storage.local.set({ [AUTH_STORAGE_KEY]: credentials }, () => {
-        resolve();
-      });
-    });
-    currentUserId = credentials.uid;
-    setupSessionListener(credentials.uid);
-    console.log("[Flow] Auth credentials stored for user:", credentials.uid);
-  }
-  async function handleClearCredentials() {
-    if (currentSession && currentUserId && currentSession.status === "active") {
-      try {
-        await stopActiveSession(currentUserId, currentSession.id);
-        console.log("[Flow] Active session stopped on logout");
-      } catch (error) {
-        console.error("[Flow] Error stopping session on logout:", error);
-      }
-    }
-    await new Promise((resolve) => {
-      browserAPI.storage.local.remove([AUTH_STORAGE_KEY], () => {
-        resolve();
-      });
-    });
-    cleanupSessionListener();
-    console.log("[Flow] Auth credentials cleared");
-  }
-  async function stopActiveSession(userId, sessionId) {
+    isLoadingTodos = true;
+    renderTodos([]);
     const firebaseApp = initializeFirebaseApp();
     const db = getFirestore(firebaseApp);
-    const sessionRef = doc(db, "users", userId, "sessions", sessionId);
-    await updateDoc(sessionRef, {
-      status: "stopped",
-      endedAt: Timestamp.now()
-    });
+    const todosRef = collection(
+      db,
+      "users",
+      userId,
+      "sessions",
+      sessionId,
+      "todos"
+    );
+    const q = query(todosRef, orderBy("createdAt", "asc"));
+    todosUnsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        isLoadingTodos = false;
+        const todos = snapshot.docs.map((doc2) => ({
+          id: doc2.id,
+          ...doc2.data()
+        }));
+        renderTodos(todos);
+      },
+      (error) => {
+        console.error("[Flow] Error listening to todos:", error);
+        isLoadingTodos = false;
+        renderTodos([]);
+      }
+    );
   }
-  function setupMessageListener() {
-    browserAPI.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-      switch (message.type) {
-        case "GET_CURRENT_SESSION":
-          sendResponse({ session: currentSession, userId: currentUserId });
-          break;
-        case "GET_AUTH_STATUS":
-          sendResponse({
-            isAuthenticated: !!currentUserId,
-            userId: currentUserId
-          });
-          break;
-        case "STORE_AUTH_CREDENTIALS":
-          handleStoreCredentials(message.credentials).then(() => sendResponse({ success: true })).catch(
-            (error) => sendResponse({ success: false, error: error.message })
-          );
-          return true;
-        case "CLEAR_AUTH_CREDENTIALS":
-          handleClearCredentials().then(() => sendResponse({ success: true })).catch(
-            (error) => sendResponse({ success: false, error: error.message })
-          );
-          return true;
-        default:
-          sendResponse({ error: "Unknown message type" });
+  async function initialize() {
+    showState("loading");
+    addTodoBtnEl.addEventListener("click", handleAddTodo);
+    newTodoInputEl.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        handleAddTodo();
       }
-      return true;
     });
+    const credentials = await getStoredCredentials();
+    if (!credentials) {
+      showState("login");
+      return;
+    }
+    currentUserId = credentials.uid;
+    showState("main");
+    setupSessionListener(credentials.uid);
   }
-  browserAPI.webNavigation.onBeforeNavigate.addListener((details) => {
-    if (details.frameId !== 0)
-      return;
-    if (shouldBlockUrl(details.url, currentSession)) {
-      console.log("[Flow] Blocking navigation to:", details.url);
-      if (currentSession && currentUserId && !preOpenedUrls.has(details.url)) {
-        logTabSwitchAttempt(currentUserId, currentSession.id, details.url);
-      }
-    }
+  document.addEventListener("DOMContentLoaded", initialize);
+  window.addEventListener("unload", () => {
+    if (sessionUnsubscribe)
+      sessionUnsubscribe();
+    if (todosUnsubscribe)
+      todosUnsubscribe();
+    if (timerInterval)
+      clearInterval(timerInterval);
   });
-  browserAPI.webNavigation.onCommitted.addListener((details) => {
-    if (details.frameId !== 0)
-      return;
-    if (shouldBlockUrl(details.url, currentSession)) {
-      console.log("[Flow] Page committed, showing overlay:", details.url);
-      if (currentSession && currentUserId && !preOpenedUrls.has(details.url)) {
-        logTabSwitchAttempt(currentUserId, currentSession.id, details.url);
-      }
-      browserAPI.tabs.sendMessage(details.tabId, {
-        type: "SHOW_BLOCKING_OVERLAY",
-        url: details.url,
-        session: currentSession
-      }).catch(() => {
-        injectBlockingOverlay(details.tabId, details.url);
-      });
-    }
-  });
-  browserAPI.webNavigation.onCompleted.addListener((details) => {
-    if (details.frameId !== 0)
-      return;
-    if (shouldBlockUrl(details.url, currentSession)) {
-      browserAPI.tabs.sendMessage(details.tabId, {
-        type: "SHOW_BLOCKING_OVERLAY",
-        url: details.url,
-        session: currentSession
-      }).catch(() => {
-        injectBlockingOverlay(details.tabId, details.url);
-      });
-    }
-  });
-  browserAPI.tabs.onActivated.addListener(async (activeInfo) => {
-    try {
-      const tab = await browserAPI.tabs.get(activeInfo.tabId);
-      if (tab.url && shouldBlockUrl(tab.url, currentSession)) {
-        browserAPI.tabs.sendMessage(activeInfo.tabId, {
-          type: "SHOW_BLOCKING_OVERLAY",
-          url: tab.url,
-          session: currentSession
-        }).catch(() => {
-          injectBlockingOverlay(activeInfo.tabId, tab.url);
-        });
-      }
-    } catch (error) {
-    }
-  });
-  setupAuthListener();
-  setupMessageListener();
-  initialize();
 })();
 /*! Bundled license information:
 

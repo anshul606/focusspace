@@ -34,7 +34,7 @@ export function getFirebaseDb(): Firestore {
   return db!;
 }
 
-const AUTH_STORAGE_KEY = "focusspace_auth_credentials";
+const AUTH_STORAGE_KEY = "flow_auth_credentials";
 
 export async function getStoredCredentials(): Promise<StoredAuthCredentials | null> {
   return new Promise((resolve) => {

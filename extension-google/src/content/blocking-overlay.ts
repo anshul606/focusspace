@@ -6,6 +6,9 @@
  * - 3.3: Display a Blocking_Overlay with a message indicating the site is not allowed
  */
 
+// Overlay element ID prefix
+const OVERLAY_ID = "flow-blocking-overlay";
+
 interface BlockingMessage {
   type: "SHOW_BLOCKING_OVERLAY";
   url: string;
@@ -27,16 +30,16 @@ function createBlockingOverlay(blockedUrl: string): void {
 
   // Create overlay container
   overlayElement = document.createElement("div");
-  overlayElement.id = "focusspace-blocking-overlay";
-  overlayElement.className = "focusspace-overlay";
+  overlayElement.id = OVERLAY_ID;
+  overlayElement.className = "flow-overlay";
 
   // Create content container
   const contentContainer = document.createElement("div");
-  contentContainer.className = "focusspace-overlay-content";
+  contentContainer.className = "flow-overlay-content";
 
   // Create icon
   const icon = document.createElement("div");
-  icon.className = "focusspace-overlay-icon";
+  icon.className = "flow-overlay-icon";
   icon.innerHTML = `
     <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="10"></circle>
@@ -46,22 +49,22 @@ function createBlockingOverlay(blockedUrl: string): void {
 
   // Create title
   const title = document.createElement("h1");
-  title.className = "focusspace-overlay-title";
+  title.className = "flow-overlay-title";
   title.textContent = "Site Blocked";
 
   // Create message
   const message = document.createElement("p");
-  message.className = "focusspace-overlay-message";
+  message.className = "flow-overlay-message";
   message.textContent = "This site is not allowed during your focus session.";
 
   // Create URL display
   const urlDisplay = document.createElement("p");
-  urlDisplay.className = "focusspace-overlay-url";
+  urlDisplay.className = "flow-overlay-url";
   urlDisplay.textContent = truncateUrl(blockedUrl);
 
   // Create encouragement message
   const encouragement = document.createElement("p");
-  encouragement.className = "focusspace-overlay-encouragement";
+  encouragement.className = "flow-overlay-encouragement";
   encouragement.textContent = "Stay focused! You can do this. 💪";
 
   // Assemble content
@@ -96,9 +99,7 @@ function removeBlockingOverlay(): void {
   overlayElement = null;
 
   // Also try to remove by ID in case reference was lost
-  const existingOverlay = document.getElementById(
-    "focusspace-blocking-overlay"
-  );
+  const existingOverlay = document.getElementById(OVERLAY_ID);
   if (existingOverlay && existingOverlay.parentNode) {
     existingOverlay.parentNode.removeChild(existingOverlay);
   }
@@ -127,6 +128,96 @@ function isExtensionContextValid(): boolean {
 }
 
 /**
+ * Create and show the congratulations overlay when session completes
+ */
+function createCongratulationsOverlay(
+  durationMinutes: number,
+  blockedAttempts: number
+): void {
+  // Remove any existing overlays
+  removeBlockingOverlay();
+  removeCongratulationsOverlay();
+
+  const congratsOverlay = document.createElement("div");
+  congratsOverlay.id = "flow-congrats-overlay";
+  congratsOverlay.className = "flow-overlay flow-congrats";
+
+  const contentContainer = document.createElement("div");
+  contentContainer.className = "flow-overlay-content";
+
+  // Trophy/celebration icon
+  const icon = document.createElement("div");
+  icon.className = "flow-overlay-icon flow-congrats-icon";
+  icon.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+      <path d="M4 22h16"></path>
+      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+    </svg>
+  `;
+
+  const title = document.createElement("h1");
+  title.className = "flow-overlay-title";
+  title.textContent = "🎉 Session Complete!";
+
+  const message = document.createElement("p");
+  message.className = "flow-overlay-message";
+  message.textContent =
+    "Congratulations! You stayed focused and finished your session.";
+
+  const stats = document.createElement("div");
+  stats.className = "flow-congrats-stats";
+  stats.innerHTML = `
+    <div class="flow-stat">
+      <span class="flow-stat-value">${durationMinutes}</span>
+      <span class="flow-stat-label">minutes focused</span>
+    </div>
+    <div class="flow-stat">
+      <span class="flow-stat-value">${blockedAttempts}</span>
+      <span class="flow-stat-label">distractions blocked</span>
+    </div>
+  `;
+
+  const encouragement = document.createElement("p");
+  encouragement.className = "flow-overlay-encouragement";
+  encouragement.textContent = "Great work! Keep up the momentum! 🚀";
+
+  contentContainer.appendChild(icon);
+  contentContainer.appendChild(title);
+  contentContainer.appendChild(message);
+  contentContainer.appendChild(stats);
+  contentContainer.appendChild(encouragement);
+  congratsOverlay.appendChild(contentContainer);
+
+  if (document.body) {
+    document.body.appendChild(congratsOverlay);
+  }
+
+  // Auto-remove after 3 seconds
+  setTimeout(() => {
+    removeCongratulationsOverlay();
+  }, 3000);
+}
+
+/**
+ * Remove the congratulations overlay
+ */
+function removeCongratulationsOverlay(): void {
+  const congratsOverlay = document.getElementById("flow-congrats-overlay");
+  if (congratsOverlay && congratsOverlay.parentNode) {
+    congratsOverlay.classList.add("flow-fade-out");
+    setTimeout(() => {
+      if (congratsOverlay.parentNode) {
+        congratsOverlay.parentNode.removeChild(congratsOverlay);
+      }
+    }, 300);
+  }
+}
+
+/**
  * Listen for messages from the background service worker
  */
 function setupMessageListener(): void {
@@ -135,7 +226,14 @@ function setupMessageListener(): void {
   try {
     chrome.runtime.onMessage.addListener(
       (
-        message: BlockingMessage | { type: "REMOVE_BLOCKING_OVERLAY" },
+        message:
+          | BlockingMessage
+          | { type: "REMOVE_BLOCKING_OVERLAY" }
+          | {
+              type: "SHOW_SESSION_COMPLETE";
+              durationMinutes: number;
+              blockedAttempts: number;
+            },
         _sender: chrome.runtime.MessageSender,
         sendResponse: (response: { success: boolean }) => void
       ) => {
@@ -148,6 +246,17 @@ function setupMessageListener(): void {
             sendResponse({ success: true });
           } else if (message.type === "REMOVE_BLOCKING_OVERLAY") {
             removeBlockingOverlay();
+            sendResponse({ success: true });
+          } else if (message.type === "SHOW_SESSION_COMPLETE") {
+            const completeMsg = message as {
+              type: "SHOW_SESSION_COMPLETE";
+              durationMinutes: number;
+              blockedAttempts: number;
+            };
+            createCongratulationsOverlay(
+              completeMsg.durationMinutes,
+              completeMsg.blockedAttempts
+            );
             sendResponse({ success: true });
           }
         } catch {
@@ -264,6 +373,27 @@ function isInternalUrl(url: string): boolean {
 }
 
 /**
+ * Check if URL is the Flow app (should never be blocked)
+ */
+function isFlowApp(url: string): boolean {
+  const allowedDomains = [
+    "localhost",
+    "127.0.0.1",
+    "vercel.app",
+    "anshul.space",
+  ];
+  try {
+    const parsed = new URL(url);
+    const hostname = parsed.hostname.toLowerCase();
+    return allowedDomains.some(
+      (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Safely send a message to the background script
  * Handles cases where extension context is invalidated
  */
@@ -315,6 +445,12 @@ function checkCurrentUrl(): void {
 
     // Skip internal URLs
     if (isInternalUrl(currentUrl)) {
+      removeBlockingOverlay();
+      return;
+    }
+
+    // Always allow the Flow app
+    if (isFlowApp(currentUrl)) {
       removeBlockingOverlay();
       return;
     }

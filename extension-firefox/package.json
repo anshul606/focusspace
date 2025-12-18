@@ -1,7 +1,7 @@
 {
-  "name": "focusspace-extension-firefox",
+  "name": "flow-extension-firefox",
   "version": "1.0.0",
-  "description": "FocusSpace Firefox Extension",
+  "description": "Flow Firefox Extension",
   "scripts": {
     "build": "node build.js && npm run copy-assets",
     "copy-assets": "cp src/popup/*.html src/popup/*.css dist/popup/ 2>/dev/null || true; cp src/content/*.css dist/content/ 2>/dev/null || true",

@@ -1,5 +1,5 @@
 /**
- * FocusSpace Extension Popup
+ * Flow Extension Popup
  *
  * Requirements:
  * - 2.1: Display remaining session time
@@ -43,7 +43,7 @@ const firebaseConfig = {
 };
 
 // Storage key for auth credentials
-const AUTH_STORAGE_KEY = "focusspace_auth_credentials";
+const AUTH_STORAGE_KEY = "flow_auth_credentials";
 
 // SVG Icons (Lucide-style)
 const icons = {
@@ -415,7 +415,7 @@ async function handleTodoToggle(event: Event): Promise<void> {
       });
     }
   } catch (error) {
-    console.error("[FocusSpace] Error toggling todo:", error);
+    console.error("[Flow] Error toggling todo:", error);
     // Revert checkbox state on error
     checkbox.checked = !checkbox.checked;
   }
@@ -457,7 +457,7 @@ async function handleAddTodo(): Promise<void> {
     // Clear input on success
     newTodoInputEl.value = "";
   } catch (error) {
-    console.error("[FocusSpace] Error adding todo:", error);
+    console.error("[Flow] Error adding todo:", error);
   } finally {
     addTodoBtnEl.removeAttribute("disabled");
   }
@@ -511,7 +511,7 @@ function setupSessionListener(userId: string): void {
       renderSessionStatus();
     },
     (error) => {
-      console.error("[FocusSpace] Error listening to session:", error);
+      console.error("[Flow] Error listening to session:", error);
       isLoadingSession = false;
       currentSession = null;
       renderSessionStatus();
@@ -556,7 +556,7 @@ function setupTodosListener(userId: string, sessionId: string): void {
       renderTodos(todos);
     },
     (error) => {
-      console.error("[FocusSpace] Error listening to todos:", error);
+      console.error("[Flow] Error listening to todos:", error);
       isLoadingTodos = false;
       renderTodos([]);
     }

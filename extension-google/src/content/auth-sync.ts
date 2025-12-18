@@ -7,18 +7,18 @@
  * - 7.4: Handle logout and clear extension authentication
  */
 
-const AUTH_STORAGE_KEY = "focusspace_auth_credentials";
+const AUTH_STORAGE_KEY = "flow_auth_credentials";
 
 /**
- * Check if we're on the FocusSpace web app domain
+ * Check if we're on the Flow web app domain
  */
-function isFocusSpaceDomain(): boolean {
+function isFlowDomain(): boolean {
   const hostname = window.location.hostname;
-  // Match localhost for development and production domain
+  // Match localhost for development and production domain (flow.anshul.space)
   return (
     hostname === "localhost" ||
     hostname === "127.0.0.1" ||
-    hostname.includes("focusspace") ||
+    hostname.includes("anshul.space") ||
     hostname.includes("vercel.app")
   );
 }
@@ -37,21 +37,18 @@ function syncCredentialsFromLocalStorage(): void {
           (response) => {
             if (chrome.runtime.lastError) {
               console.warn(
-                "[FocusSpace] Error syncing credentials:",
+                "[Flow] Error syncing credentials:",
                 chrome.runtime.lastError.message
               );
             } else if (response?.success) {
-              console.log("[FocusSpace] Credentials synced from localStorage");
+              console.log("[Flow] Credentials synced from localStorage");
             }
           }
         );
       }
     }
   } catch (error) {
-    console.error(
-      "[FocusSpace] Error reading credentials from localStorage:",
-      error
-    );
+    console.error("[Flow] Error reading credentials from localStorage:", error);
   }
 }
 
@@ -60,7 +57,7 @@ function syncCredentialsFromLocalStorage(): void {
  */
 function setupAuthEventListeners(): void {
   // Listen for auth update events
-  window.addEventListener("focusspace-auth-update", ((event: CustomEvent) => {
+  window.addEventListener("flow-auth-update", ((event: CustomEvent) => {
     const credentials = event.detail;
     if (credentials) {
       chrome.runtime.sendMessage(
@@ -68,11 +65,11 @@ function setupAuthEventListeners(): void {
         (response) => {
           if (chrome.runtime.lastError) {
             console.warn(
-              "[FocusSpace] Error storing credentials:",
+              "[Flow] Error storing credentials:",
               chrome.runtime.lastError.message
             );
           } else if (response?.success) {
-            console.log("[FocusSpace] Auth credentials updated");
+            console.log("[Flow] Auth credentials updated");
           }
         }
       );
@@ -80,17 +77,17 @@ function setupAuthEventListeners(): void {
   }) as EventListener);
 
   // Listen for auth clear events (logout)
-  window.addEventListener("focusspace-auth-clear", () => {
+  window.addEventListener("flow-auth-clear", () => {
     chrome.runtime.sendMessage(
       { type: "CLEAR_AUTH_CREDENTIALS" },
       (response) => {
         if (chrome.runtime.lastError) {
           console.warn(
-            "[FocusSpace] Error clearing credentials:",
+            "[Flow] Error clearing credentials:",
             chrome.runtime.lastError.message
           );
         } else if (response?.success) {
-          console.log("[FocusSpace] Auth credentials cleared");
+          console.log("[Flow] Auth credentials cleared");
         }
       }
     );
@@ -127,9 +124,9 @@ function setupAuthEventListeners(): void {
   });
 }
 
-// Only run on FocusSpace domains
-if (isFocusSpaceDomain()) {
-  console.log("[FocusSpace] Auth sync content script loaded");
+// Only run on Flow domains
+if (isFlowDomain()) {
+  console.log("[Flow] Auth sync content script loaded");
 
   // Sync any existing credentials on page load
   syncCredentialsFromLocalStorage();

@@ -6,14 +6,15 @@ declare const browser: typeof chrome | undefined;
 const browserAPI: typeof chrome =
   typeof browser !== "undefined" ? browser : chrome;
 
-const AUTH_STORAGE_KEY = "focusspace_auth_credentials";
+const AUTH_STORAGE_KEY = "flow_auth_credentials";
 
-function isFocusSpaceDomain(): boolean {
+function isFlowDomain(): boolean {
   const hostname = window.location.hostname;
+  // Match localhost for development and production domain (flow.anshul.space)
   return (
     hostname === "localhost" ||
     hostname === "127.0.0.1" ||
-    hostname.includes("focusspace") ||
+    hostname.includes("anshul.space") ||
     hostname.includes("vercel.app")
   );
 }
@@ -29,26 +30,23 @@ function syncCredentialsFromLocalStorage(): void {
           (response) => {
             if (browserAPI.runtime.lastError) {
               console.warn(
-                "[FocusSpace] Error syncing credentials:",
+                "[Flow] Error syncing credentials:",
                 browserAPI.runtime.lastError.message
               );
             } else if (response?.success) {
-              console.log("[FocusSpace] Credentials synced from localStorage");
+              console.log("[Flow] Credentials synced from localStorage");
             }
           }
         );
       }
     }
   } catch (error) {
-    console.error(
-      "[FocusSpace] Error reading credentials from localStorage:",
-      error
-    );
+    console.error("[Flow] Error reading credentials from localStorage:", error);
   }
 }
 
 function setupAuthEventListeners(): void {
-  window.addEventListener("focusspace-auth-update", ((event: CustomEvent) => {
+  window.addEventListener("flow-auth-update", ((event: CustomEvent) => {
     const credentials = event.detail;
     if (credentials) {
       browserAPI.runtime.sendMessage(
@@ -56,28 +54,28 @@ function setupAuthEventListeners(): void {
         (response) => {
           if (browserAPI.runtime.lastError) {
             console.warn(
-              "[FocusSpace] Error storing credentials:",
+              "[Flow] Error storing credentials:",
               browserAPI.runtime.lastError.message
             );
           } else if (response?.success) {
-            console.log("[FocusSpace] Auth credentials updated");
+            console.log("[Flow] Auth credentials updated");
           }
         }
       );
     }
   }) as EventListener);
 
-  window.addEventListener("focusspace-auth-clear", () => {
+  window.addEventListener("flow-auth-clear", () => {
     browserAPI.runtime.sendMessage(
       { type: "CLEAR_AUTH_CREDENTIALS" },
       (response) => {
         if (browserAPI.runtime.lastError) {
           console.warn(
-            "[FocusSpace] Error clearing credentials:",
+            "[Flow] Error clearing credentials:",
             browserAPI.runtime.lastError.message
           );
         } else if (response?.success) {
-          console.log("[FocusSpace] Auth credentials cleared");
+          console.log("[Flow] Auth credentials cleared");
         }
       }
     );
@@ -115,8 +113,8 @@ function setupAuthEventListeners(): void {
   });
 }
 
-if (isFocusSpaceDomain()) {
-  console.log("[FocusSpace] Auth sync content script loaded");
+if (isFlowDomain()) {
+  console.log("[Flow] Auth sync content script loaded");
   syncCredentialsFromLocalStorage();
   setupAuthEventListeners();
 }

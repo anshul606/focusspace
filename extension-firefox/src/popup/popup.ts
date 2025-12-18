@@ -1,5 +1,5 @@
 /**
- * FocusSpace Extension Popup - Firefox
+ * Flow Extension Popup - Firefox
  */
 
 declare const browser: typeof chrome | undefined;
@@ -38,7 +38,7 @@ const firebaseConfig = {
   appId: "1:356773523134:web:b48c5ef84412f5975b78ef",
 };
 
-const AUTH_STORAGE_KEY = "focusspace_auth_credentials";
+const AUTH_STORAGE_KEY = "flow_auth_credentials";
 
 const icons = {
   shield: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>`,
@@ -342,7 +342,7 @@ async function handleTodoToggle(event: Event): Promise<void> {
       });
     }
   } catch (error) {
-    console.error("[FocusSpace] Error toggling todo:", error);
+    console.error("[Flow] Error toggling todo:", error);
     checkbox.checked = !checkbox.checked;
   }
 }
@@ -377,7 +377,7 @@ async function handleAddTodo(): Promise<void> {
 
     newTodoInputEl.value = "";
   } catch (error) {
-    console.error("[FocusSpace] Error adding todo:", error);
+    console.error("[Flow] Error adding todo:", error);
   } finally {
     addTodoBtnEl.removeAttribute("disabled");
   }
@@ -420,7 +420,7 @@ function setupSessionListener(userId: string): void {
       renderSessionStatus();
     },
     (error) => {
-      console.error("[FocusSpace] Error listening to session:", error);
+      console.error("[Flow] Error listening to session:", error);
       isLoadingSession = false;
       currentSession = null;
       renderSessionStatus();
@@ -458,7 +458,7 @@ function setupTodosListener(userId: string, sessionId: string): void {
       renderTodos(todos);
     },
     (error) => {
-      console.error("[FocusSpace] Error listening to todos:", error);
+      console.error("[Flow] Error listening to todos:", error);
       isLoadingTodos = false;
       renderTodos([]);
     }

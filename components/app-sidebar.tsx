@@ -86,7 +86,7 @@ export function AppSidebar() {
             <FocusIcon className="size-6 text-indigo-400" />
           </div>
           <span className="text-xl font-semibold tracking-tight text-white group-data-[collapsible=icon]:hidden">
-            FocusSpace
+            Flow
           </span>
         </Link>
       </SidebarHeader>
@@ -128,16 +128,12 @@ export function AppSidebar() {
                   size="lg"
                   className="gap-3 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-300 group-data-[collapsible=icon]:justify-center"
                 >
-                  <a
-                    href="https://www.transfernow.net/dl/focusspace1"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <Link href="/dashboard/install-extension">
                     <Download strokeWidth={1.75} className="shrink-0" />
                     <span className="font-medium group-data-[collapsible=icon]:hidden">
                       Install Extension
                     </span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

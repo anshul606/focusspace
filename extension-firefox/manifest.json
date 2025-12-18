@@ -1,11 +1,11 @@
 {
   "manifest_version": 2,
-  "name": "FocusSpace - Focus Session Blocker",
+  "name": "Flow - Focus Session Blocker",
   "version": "1.0.0",
   "description": "Enforce website restrictions during focus sessions to maintain productivity",
   "browser_specific_settings": {
     "gecko": {
-      "id": "focusspace@focusspace.app",
+      "id": "flow@flow.app",
       "strict_min_version": "109.0"
     }
   },
@@ -39,7 +39,7 @@
       "matches": [
         "http://localhost/*",
         "http://127.0.0.1/*",
-        "*://*.focusspace.app/*",
+        "*://*.anshul.space/*",
         "*://*.vercel.app/*"
       ],
       "js": ["dist/content/auth-sync.js"],
