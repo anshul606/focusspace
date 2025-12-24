@@ -52,6 +52,7 @@ export function SessionHistory({
       mode: session.mode,
       urls: session.urls,
       durationMinutes: session.durationMinutes,
+      endPhrase: session.endPhrase,
     };
     sessionStorage.setItem("reuse-session-config", JSON.stringify(config));
     router.push("/dashboard/create");

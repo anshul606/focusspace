@@ -25,6 +25,7 @@ export interface CreateSessionInput {
   mode: "allowlist" | "blocklist";
   urls: string[];
   durationMinutes: number;
+  endPhrase: string;
 }
 
 /**
@@ -40,13 +41,14 @@ const getSessionsCollection = (userId: string) =>
 export async function createSession(
   input: CreateSessionInput
 ): Promise<FocusSession> {
-  const { userId, mode, urls, durationMinutes } = input;
+  const { userId, mode, urls, durationMinutes, endPhrase } = input;
 
   const sessionData = {
     userId,
     mode,
     urls,
     durationMinutes,
+    endPhrase,
     startedAt: Timestamp.now(),
     endedAt: null,
     status: "active" as const,

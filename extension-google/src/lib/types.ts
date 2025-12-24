@@ -12,6 +12,7 @@ export interface FocusSession {
   mode: "allowlist" | "blocklist";
   urls: string[];
   durationMinutes: number;
+  endPhrase: string;
   startedAt: FirestoreTimestamp;
   endedAt: FirestoreTimestamp | null;
   status: "active" | "completed" | "stopped";

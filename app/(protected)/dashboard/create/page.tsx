@@ -166,6 +166,7 @@ export default function CreateSessionPage() {
         mode: formData.mode,
         urls: formData.urls,
         durationMinutes: formData.durationMinutes,
+        endPhrase: formData.endPhrase,
       });
 
       // Add todos to the session

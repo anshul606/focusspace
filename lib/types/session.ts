@@ -9,6 +9,7 @@ export interface FocusSession {
   mode: "allowlist" | "blocklist";
   urls: string[];
   durationMinutes: number;
+  endPhrase: string;
   startedAt: Timestamp;
   endedAt: Timestamp | null;
   status: "active" | "completed" | "stopped";

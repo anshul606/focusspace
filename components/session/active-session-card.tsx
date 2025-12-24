@@ -78,7 +78,7 @@ export function ActiveSessionCard({
   const [removeConfirmText, setRemoveConfirmText] = useState("");
   const [isRemovingUrl, setIsRemovingUrl] = useState(false);
 
-  const STOP_CONFIRM_PHRASE = "i am giving up my goals";
+  const STOP_CONFIRM_PHRASE = session.endPhrase || "i am giving up my goals";
   const REMOVE_CONFIRM_PHRASE = "confirm";
 
   const totalDurationMs = session.durationMinutes * 60 * 1000;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Clock, Shield, ShieldOff } from "lucide-react";
+import { Clock, Shield, ShieldOff, Type, Check } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -20,6 +20,7 @@ export interface SessionFormData {
   mode: "allowlist" | "blocklist";
   urls: string[];
   durationMinutes: number;
+  endPhrase: string;
 }
 
 interface SessionFormProps {
@@ -35,6 +36,8 @@ const DURATION_PRESETS = [
 ];
 
 const STORAGE_KEY = "flow-draft-session";
+const DEFAULT_END_PHRASE_KEY = "flow-default-end-phrase";
+const DEFAULT_END_PHRASE = "i am giving up my goals";
 
 export function SessionForm({
   onSubmit,
@@ -45,16 +48,29 @@ export function SessionForm({
   const [urls, setUrls] = useState<string[]>([]);
   const [durationMinutes, setDurationMinutes] = useState<string>("25");
   const [durationError, setDurationError] = useState<string | null>(null);
+  const [endPhrase, setEndPhrase] = useState<string>(DEFAULT_END_PHRASE);
+  const [isDefaultEndPhrase, setIsDefaultEndPhrase] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Load from localStorage or initialData on mount
   useEffect(() => {
+    // Load saved default end phrase
+    const savedDefaultEndPhrase = localStorage.getItem(DEFAULT_END_PHRASE_KEY);
+    const defaultPhrase = savedDefaultEndPhrase || DEFAULT_END_PHRASE;
+
     // First priority: initialData from props (reused session)
     if (initialData && Object.keys(initialData).length > 0) {
       if (initialData.mode) setMode(initialData.mode);
       if (initialData.urls) setUrls(initialData.urls);
       if (initialData.durationMinutes)
         setDurationMinutes(initialData.durationMinutes.toString());
+      if (initialData.endPhrase) {
+        setEndPhrase(initialData.endPhrase);
+        setIsDefaultEndPhrase(initialData.endPhrase === defaultPhrase);
+      } else {
+        setEndPhrase(defaultPhrase);
+        setIsDefaultEndPhrase(true);
+      }
       setIsInitialized(true);
       // Clear any saved draft since we're using a reused config
       localStorage.removeItem(STORAGE_KEY);
@@ -69,9 +85,22 @@ export function SessionForm({
         if (draft.mode) setMode(draft.mode);
         if (draft.urls) setUrls(draft.urls);
         if (draft.durationMinutes) setDurationMinutes(draft.durationMinutes);
+        if (draft.endPhrase) {
+          setEndPhrase(draft.endPhrase);
+          setIsDefaultEndPhrase(draft.endPhrase === defaultPhrase);
+        } else {
+          setEndPhrase(defaultPhrase);
+          setIsDefaultEndPhrase(true);
+        }
       } catch (e) {
         console.error("Failed to parse saved draft:", e);
+        setEndPhrase(defaultPhrase);
+        setIsDefaultEndPhrase(true);
       }
+    } else {
+      // No draft, use default
+      setEndPhrase(defaultPhrase);
+      setIsDefaultEndPhrase(true);
     }
     setIsInitialized(true);
   }, [initialData]);
@@ -80,9 +109,21 @@ export function SessionForm({
   useEffect(() => {
     if (!isInitialized) return;
 
-    const draft = { mode, urls, durationMinutes };
+    const draft = { mode, urls, durationMinutes, endPhrase };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
-  }, [mode, urls, durationMinutes, isInitialized]);
+  }, [mode, urls, durationMinutes, endPhrase, isInitialized]);
+
+  const handleEndPhraseChange = (value: string) => {
+    setEndPhrase(value);
+    const savedDefault =
+      localStorage.getItem(DEFAULT_END_PHRASE_KEY) || DEFAULT_END_PHRASE;
+    setIsDefaultEndPhrase(value === savedDefault);
+  };
+
+  const handleSetAsDefault = () => {
+    localStorage.setItem(DEFAULT_END_PHRASE_KEY, endPhrase);
+    setIsDefaultEndPhrase(true);
+  };
 
   const handleDurationChange = (value: string) => {
     setDurationMinutes(value);
@@ -112,6 +153,7 @@ export function SessionForm({
       mode,
       urls,
       durationMinutes: duration,
+      endPhrase: endPhrase.trim() || DEFAULT_END_PHRASE,
     });
   };
 
@@ -252,6 +294,44 @@ export function SessionForm({
               {mode === "allowlist" ? "Allowed URLs" : "Blocked URLs"}
             </Label>
             <UrlListManager urls={urls} onUrlsChange={setUrls} mode={mode} />
+          </div>
+
+          {/* End Session Phrase */}
+          <div className="space-y-3">
+            <Label className="text-zinc-300 flex items-center gap-2">
+              <Type className="size-4 text-indigo-400" />
+              End Session Phrase
+            </Label>
+            <p className="text-xs text-zinc-500">
+              You&apos;ll need to type this phrase to end your session early
+            </p>
+            <div className="flex gap-2">
+              <Input
+                type="text"
+                value={endPhrase}
+                onChange={(e) => handleEndPhraseChange(e.target.value)}
+                placeholder="Enter phrase to end session"
+                className="flex-1 bg-zinc-900/50 border-zinc-800 focus:border-indigo-500/50"
+              />
+              {!isDefaultEndPhrase && endPhrase.trim() && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSetAsDefault}
+                  className="border-zinc-700 hover:bg-zinc-800 text-zinc-300 whitespace-nowrap"
+                >
+                  <Check className="size-3 mr-1" />
+                  Set as default
+                </Button>
+              )}
+            </div>
+            {isDefaultEndPhrase && (
+              <p className="text-xs text-indigo-400 flex items-center gap-1">
+                <Check className="size-3" />
+                Using your default phrase
+              </p>
+            )}
           </div>
 
           {/* Submit Button */}
